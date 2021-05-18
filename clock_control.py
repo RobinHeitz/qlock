@@ -5,12 +5,13 @@ from pixel_definition import (
     HOUR_DEF, MIN_POINTS_DEF, WD_10_1, WD_20_1, WD_5_1, WD_MIN_4, WD_IT_IS,WD_1_O_CLOCK,WD_CLOCK,
     WD_5_MIN_AFTER,WD_10_MIN_AFTER,WD_15_MIN_AFTER,WD_20_MIN_AFTER,WD_5_MIN_BEFORE_HALF,WD_HALF,
     WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_before, WD_quarter,
+    WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY
     )
 from pixel_controller import PixelController
 
 
 
-# BIRTH_DAY = (5,17) #month, day
+# BIRTH_DAY = (5,18) #month, day
 BIRTH_DAY = (6,14) #month, day
 
 def next_hour(current_h):
@@ -93,6 +94,32 @@ def activate_words(controller, min, h):
         controller.deactivatePixels(WD_10_1)
 
 
+def handle_birthday(controller, isBirthday):
+    if isBirthday:
+        controller.activatePixelsRGB(WD_HAPPY,28,217,230)
+        controller.activatePixelsRGB(WD_BIRTHDAY,242,8,148)
+    else:
+        controller.activatePixelsRGB(WD_HAPPY,255,0,0)
+
+def activate_charly(controller, isBirthday):
+    controller.activatePixelsRGB(WD_CHARLY,255,128,0)
+
+def handle_good_morning_night(controller, min, hour, date_time):
+    """Handles good morning (6-8 or 9-10:30 at the weekend) / good night text (21:30-23:00)."""
+
+    if 6 <= date_time.hour <8:
+        controller.activatePixelsRGB(WD_HAPPY,255,0,0)
+
+
+
+    if 1 <= date_time.isoweekday() <= 5:
+        #in the week
+        pass
+    else:
+        #weekend
+        pass
+
+
 
 
 if __name__ == "__main__":
@@ -118,7 +145,6 @@ if __name__ == "__main__":
             hour = translate_to_12h_clock(hour_pre_transform)
 
             if m == BIRTH_DAY[0] and d == BIRTH_DAY[1]:
-                print("ITS HER BIRTHDAY")
                 birthday = True
             
 
@@ -129,6 +155,12 @@ if __name__ == "__main__":
             activate_hour(controller,min, hour)
 
             activate_words(controller, min, hour)
+
+            handle_birthday(controller, birthday)
+
+            activate_charly(controller, birthday)
+
+            handle_good_morning_night(controller,min, hour, local_time)
                 
             time.sleep(1)
     

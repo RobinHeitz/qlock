@@ -18,25 +18,26 @@ LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 
 class PixelController(object):
-    def __init__(self):
+    def __init__(self, brightness=LED_BRIGHTNESS, std_color=(255,255,255)):
         self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
         self.strip.begin()
-        self.color_std = Color(150,150,150)
-
-
-    def testaction(self):
-        self.strip.setPixelColor(80, self.color_std)
-        self.strip.show()
+        self.color = (255,255,255)
 
     def activatePixels(self, pixels):
+        self.activatePixelsRGB(pixels, *self.color)
+
+    def activatePixelsRGB(self, pixels, *args):
         for p in pixels:
-            self.strip.setPixelColor(p, self.color_std)
+            self.strip.setPixelColorRGB(p, *args)
         self.strip.show()
+
 
     def deactivatePixels(self, pixels):
         for p in pixels:
             self.strip.setPixelColor(p, Color(0,0,0))
         self.strip.show()
+    
+
 
 
 # if __name__ == '__main__':
