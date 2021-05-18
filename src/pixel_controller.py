@@ -34,7 +34,6 @@ class PixelController(object):
         self.strip.show()
 
     def deactivatePixels(self, pixels):
-        print("deactivate Pixels")
         for p in pixels:
             self.strip.setPixelColor(p, Color(0,0,0))
         self.strip.show()

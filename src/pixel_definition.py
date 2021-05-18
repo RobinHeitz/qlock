@@ -33,6 +33,19 @@ WD_MIN_2 = [0,255]
 WD_MIN_3 = [0,255,240]
 WD_MIN_4 = [0,255,240,15]
 
+WD_5_MIN_AFTER = WD_5_1 + WD_after 
+WD_10_MIN_AFTER = WD_10_1 + WD_after 
+WD_15_MIN_AFTER = WD_quarter + WD_after 
+WD_20_MIN_AFTER = WD_20_1 + WD_after 
+WD_5_MIN_BEFORE_HALF = WD_5_1 + WD_before + WD_HALF 
+WD_5_MIN_AFTER_HALF = WD_5_1 + WD_after + WD_HALF 
+WD_20_BEFORE = WD_20_1 + WD_before
+WD_15_BEFORE = WD_quarter + WD_before
+WD_10_BEFORE = WD_10_1 + WD_before
+WD_5_BEFORE = WD_5_1 + WD_before
+
+
+
 HOUR_DEF  = {1:WD_1,2:WD_2,3:WD_3_2,4:WD_4,5:WD_5_2,6:WD_6,7:WD_7,8:WD_8,9:WD_9,10:WD_10_2,11:WD_11,12:WD_12}
 MIN_POINTS_DEF = {1:WD_MIN_1,2:WD_MIN_2,3:WD_MIN_3,4:WD_MIN_4,0:WD_MIN_4 }
 
