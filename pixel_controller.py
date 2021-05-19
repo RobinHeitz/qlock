@@ -37,10 +37,3 @@ class PixelController(object):
             self.strip.setPixelColor(p, Color(0,0,0))
         self.strip.show()
     
-
-
-
-# if __name__ == '__main__':
-#     pc = PixelController()
-#     pc.testaction()
-#     print("testaction done")
