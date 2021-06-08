@@ -11,6 +11,61 @@ from pixel_controller import PixelController
 
 
 
+class ClockController:
+    def __init__(self):
+        self.birthday = ""
+        self.showClock = True
+
+        self.controller = PixelController()
+
+
+        self.start_clock()
+
+    
+    def start_clock(self):
+        
+        def translate_to_12h_clock_format(h):
+            if h > 12:
+                return h % 12
+            return h
+        
+        utc = pytz.timezone('UTC')
+        now = utc.localize(datetime.utcnow())
+
+        local_tz = pytz.timezone('Europe/Berlin')
+        local_time = now.astimezone(local_tz)
+
+        y = local_time.year
+        m = local_time.month
+        d = local_time.day
+        hour = translate_to_12h_clock_format(local_time.hour)
+        min = local_time.minute
+
+        try:
+            while True:
+
+                if self.showClock is True:
+                    #show clock
+                    pass
+                else:
+                    #show additional stuff like good morning, good night etc.
+                    pass
+        except KeyboardInterrupt:
+            self.shutdown_all_pixels()
+
+
+            time.sleep(1)
+
+    
+    def shutdown_all_pixels(self):
+        """Called once after time change, clears Pixels"""
+        print("Shutdown all pixels")
+        
+
+
+
+
+
 # BIRTH_DAY = (5,18) #month, day
 BIRTH_DAY = (6,14) #month, day
 
