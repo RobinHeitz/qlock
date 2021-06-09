@@ -4,7 +4,7 @@ import time
 from pixel_definition import (
     HOUR_DEF, MIN_POINTS_DEF, WD_10_1, WD_2, WD_20_1, WD_5_1, WD_MIN_4, WD_IT_IS,WD_1_O_CLOCK,WD_CLOCK,
     WD_5_MIN_AFTER,WD_10_MIN_AFTER,WD_15_MIN_AFTER,WD_20_MIN_AFTER,WD_5_MIN_BEFORE_HALF,WD_HALF,
-    WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_before, WD_quarter,
+    WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_after, WD_before, WD_quarter,
     WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_GOOD_NIGHT,WD_GOOD_MORNING,WD_ALL_PIXELS, WD_GOOD, WD_NIGHT,
     )
 from pixel_controller import PixelController
@@ -189,6 +189,7 @@ class ClockControl:
         elif 25<= min < 30:
             self.controller.activatePixels(WD_5_MIN_BEFORE_HALF)
             self.controller.deactivatePixels(WD_20_1)
+            self.controller.deactivatePixels(WD_after)
         elif 30<= min < 35:
             self.controller.activatePixels(WD_HALF)
             self.controller.deactivatePixels(WD_5_1+WD_before)

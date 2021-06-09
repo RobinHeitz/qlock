@@ -5,62 +5,91 @@ from pixel_definition import (
     HOUR_DEF, MIN_POINTS_DEF, WD_10_1, WD_2, WD_20_1, WD_5_1, WD_MIN_4, WD_IT_IS,WD_1_O_CLOCK,WD_CLOCK,
     WD_5_MIN_AFTER,WD_10_MIN_AFTER,WD_15_MIN_AFTER,WD_20_MIN_AFTER,WD_5_MIN_BEFORE_HALF,WD_HALF,
     WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_before, WD_quarter,
-    WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY
+    WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_ALL_PIXELS
     )
 from pixel_controller import PixelController
 
 
+CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
+CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
+CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
+CLOCK_STATE_SHOW_HAPPY_BIRTHDAY = "CLOCK_STATE_SHOW_HAPPY_BIRTHDAY"
 
 class ClockController:
+
+
     def __init__(self):
-        self.birthday = ""
-        self.showClock = True
+        # self.birthday = ""
+        # self.showClock = True
 
         self.controller = PixelController()
+        self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
 
+        self.pixelStatus = dict()
 
-        self.start_clock()
+        self.clock()
 
     
-    def start_clock(self):
-        
+    def clock(self):
         def translate_to_12h_clock_format(h):
             if h > 12:
                 return h % 12
             return h
         
-        utc = pytz.timezone('UTC')
-        now = utc.localize(datetime.utcnow())
-
-        local_tz = pytz.timezone('Europe/Berlin')
-        local_time = now.astimezone(local_tz)
-
-        y = local_time.year
-        m = local_time.month
-        d = local_time.day
-        hour = translate_to_12h_clock_format(local_time.hour)
-        min = local_time.minute
 
         try:
             while True:
+                
+                utc = pytz.timezone('UTC')
+                now = utc.localize(datetime.utcnow())
 
-                if self.showClock is True:
-                    #show clock
+                local_tz = pytz.timezone('Europe/Berlin')
+                local_time = now.astimezone(local_tz)
+
+                y = local_time.year
+                m = local_time.month
+                d = local_time.day
+                hour = translate_to_12h_clock_format(local_time.hour)
+                min = local_time.minute
+
+
+                if self.currentClockState == CLOCK_STATE_SHOW_CLOCK_TIME:
+                    pass
+
+
+
+                if local_time.isoweekday() <= 5:
+                    #its weekday
                     pass
                 else:
-                    #show additional stuff like good morning, good night etc.
+                    #weekend
                     pass
+                
+                
+
+
+
+
+                time.sleep(1)
+
         except KeyboardInterrupt:
+            self.shutdown_all_pixels()
+        
+        except Exception as e:
+            print("ERROR")
+            print(e)
             self.shutdown_all_pixels()
 
 
-            time.sleep(1)
 
     
+    
+
+
     def shutdown_all_pixels(self):
         """Called once after time change, clears Pixels"""
-        print("Shutdown all pixels")
-        
+        self.controller.deactivatePixels(WD_ALL_PIXELS)
+
 
 
 
