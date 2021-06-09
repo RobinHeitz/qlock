@@ -6,6 +6,11 @@ from pixel_definition import (
     WD_quarter, WD_three_quarter, WD_3_2, WD_ALL_PIXELS, WD_BIRTHDAY, WD_GOOD, WD_MIN_2, WD_MIN_3, WD_NIGHT,HOUR_DEF
 )
 
+# from clock_control_v2 import CLOCK_STATE_SHOW_CLOCK_TIME, CLOCK_STATE_SHOW_GOOD_MORNING, CLOCK_STATE_SHOW_GOOD_NIGHT
+
+CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
+CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
+CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
 def next_hour(current_h):
         if current_h == 23:
@@ -93,3 +98,29 @@ def hour_wording_rep(min,hour):
 
     return returnPixels
 
+
+
+def determineClockState(local_time):
+        newState = None
+        # self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
+
+        if local_time.isoweekday() <= 5:
+            morning_time_start = local_time.replace(hour=18, minute=40, second=30, microsecond=0)
+            morning_time_end = local_time.replace(hour=18, minute=41, second=0, microsecond=0)
+            night_time_start = local_time.replace(hour=18, minute=41, second=30, microsecond=0)
+            night_time_end = local_time.replace(hour=18, minute=42, second=30, microsecond=0)
+        else:
+            morning_time_start = local_time.replace(hour=9, minute=30, second=0, microsecond=0)
+            morning_time_end = local_time.replace(hour=10, minute=30, second=0, microsecond=0)
+            night_time_start = local_time.replace(hour=22, minute=15, second=0, microsecond=0)
+            night_time_end = local_time.replace(hour=22, minute=30, second=0, microsecond=0)
+        
+        if morning_time_start <= local_time < morning_time_end:
+            newState = CLOCK_STATE_SHOW_GOOD_MORNING
+        elif night_time_start <= local_time < night_time_end:
+            newState = CLOCK_STATE_SHOW_GOOD_NIGHT
+        else:
+            newState = CLOCK_STATE_SHOW_CLOCK_TIME
+        
+        return newState
+        
