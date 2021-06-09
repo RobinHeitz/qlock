@@ -54,14 +54,14 @@ class ClockControl:
 
                 #check whether its time to say good morning:
                 if local_time.isoweekday() <= 5:
-                    morning_time_start = local_time.replace(hour=11, minute=28, second=0, microsecond=0)
-                    morning_time_end = local_time.replace(hour=11, minute=43, second=30, microsecond=0)
-                    night_time_start = local_time.replace(hour=19, minute=44, second=0, microsecond=0)
-                    night_time_end = local_time.replace(hour=19, minute=45, second=0, microsecond=0)
+                    morning_time_start = local_time.replace(hour=6, minute=30, second=0, microsecond=0)
+                    morning_time_end = local_time.replace(hour=7, minute=0, second=0, microsecond=0)
+                    night_time_start = local_time.replace(hour=22, minute=15, second=0, microsecond=0)
+                    night_time_end = local_time.replace(hour=22, minute=30, second=0, microsecond=0)
                 else:
                     morning_time_start = local_time.replace(hour=9, minute=30, second=0, microsecond=0)
                     morning_time_end = local_time.replace(hour=10, minute=30, second=0, microsecond=0)
-                    night_time_start = local_time.replace(hour=22, minute=0, second=0, microsecond=0)
+                    night_time_start = local_time.replace(hour=22, minute=15, second=0, microsecond=0)
                     night_time_end = local_time.replace(hour=22, minute=30, second=0, microsecond=0)
 
                 
