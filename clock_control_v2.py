@@ -9,7 +9,8 @@ from pixel_definition import (
     )
 from pixel_controller import PixelController
 
-from dataclasses import dataclass
+from helper_funcs import next_hour, translate_to_12h_clock, clock_words
+
 
 CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
@@ -19,12 +20,20 @@ CLOCK_STATE_SHOW_HAPPY_BIRTHDAY = "CLOCK_STATE_SHOW_HAPPY_BIRTHDAY"
 STD_COL = (255,255,255)
 
 DEF_MIN_DOTS = "DEF_MIN_DOTS"
+DEF_IT_IS = "DEF_IT_IS" 
+DEF_TIME_WORDS = "DEF_TIME_WORDS" #after, half, 15 min before etc.
+DEF_HOUR_WORD_REP = "DEF_HOUR_WORD_REP"
 
-@dataclass
 class ChangePixels:
-    pixels: list[int] 
-    color: tuple = (0,0,0)
 
+    def __init__(self, pixels,key,oldPixels=None, color=(255,255,255)):
+        self.pixels = pixels
+        self.key = key 
+        self.oldPixels = oldPixels
+        self.color = color
+
+    def __str__(self):
+        return 'pixels: {}'.format(self.pixels)
 
 
 
@@ -45,6 +54,7 @@ class ClockController:
 
     
     def clock(self):
+        print("CLOCK")
         def translate_to_12h_clock_format(h):
             if h > 12:
                 return h % 12
@@ -53,6 +63,7 @@ class ClockController:
 
         try:
             while True:
+                # print("WHILE-LOOP", self.pixelStatus)
                 
                 utc = pytz.timezone('UTC')
                 now = utc.localize(datetime.utcnow())
@@ -69,14 +80,32 @@ class ClockController:
 
                 self.determineClockState()
                 
-
                 
                 if self.currentClockState == CLOCK_STATE_SHOW_CLOCK_TIME:
-                    min_points = min % 5
-                    if min_points != self.pixelStatus.get(DEF_MIN_DOTS):
+                    
+                    #min dots
+                    min_pixels = MIN_POINTS_DEF.get(min % 5)
+                    old_min_pixels = self.pixelStatus.get(DEF_MIN_DOTS)
+                    
+                    if min_pixels != old_min_pixels:
+                        self.changeQueue.append(ChangePixels(min_pixels, DEF_MIN_DOTS, old_min_pixels))
+
+                    #it is
+                    if self.pixelStatus.get(DEF_IT_IS) is None:
+                        self.changeQueue.append(ChangePixels(WD_IT_IS,DEF_IT_IS))
+
+                    #timing words, like 15 min before, half etc.
+                    currentWord = clock_words(min)
+                    oldWord =self.pixelStatus.get(DEF_TIME_WORDS)
+                    if oldWord != currentWord:
+                        #need change clock word
                         self.changeQueue.append(
-                            ChangePixels(MIN_POINTS_DEF.get(min_points),*STD_COL)
+                            ChangePixels(currentWord, DEF_TIME_WORDS,oldWord)
                         )
+
+
+                       
+
 
                     
 
@@ -91,8 +120,12 @@ class ClockController:
                     
 
 
+                # for i in self.changeQueue:
+                #     # print(i)
+                #     pass
                 
-                print(self.changeQueue)
+                print("++++ len of change queue is: ", len(self.changeQueue))
+                self.workThroughQueue()
                 
                 
 
@@ -119,6 +152,21 @@ class ClockController:
     def determineClockState(self):
         
         self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
+
+    
+    def workThroughQueue(self):
+
+        while len(self.changeQueue) > 0:
+            p = self.changeQueue.pop()
+            self.controller.activatePixelsRGB(p.pixels, *p.color)
+            #deactive old pixels
+            if p.oldPixels:
+                self.controller.deactivatePixels(p.oldPixels)
+
+            self.pixelStatus[p.key] = p.pixels
+
+        
+
     
 
 
@@ -246,7 +294,9 @@ if __name__ == "__main__":
 
     birthday = False
 
-    controller = PixelController()
+    controller = ClockController()
+
+    # controller = PixelController()
     
     # try:
     #     while True:
