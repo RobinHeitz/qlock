@@ -9,13 +9,12 @@ from pixel_definition import (
     )
 from pixel_controller import PixelController
 
-from helper_funcs import next_hour, translate_to_12h_clock, clock_words
+from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep
 
 
 CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
 CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
-CLOCK_STATE_SHOW_HAPPY_BIRTHDAY = "CLOCK_STATE_SHOW_HAPPY_BIRTHDAY"
 
 STD_COL = (255,255,255)
 
@@ -24,9 +23,11 @@ DEF_IT_IS = "DEF_IT_IS"
 DEF_TIME_WORDS = "DEF_TIME_WORDS" #after, half, 15 min before etc.
 DEF_HOUR_WORD_REP = "DEF_HOUR_WORD_REP"
 
+DEF_BIRTHDAY = "DEF_BIRTHDAY"
+
 class ChangePixels:
 
-    def __init__(self, pixels,key,oldPixels=None, color=(255,255,255)):
+    def __init__(self, pixels,key,oldPixels=None, color=STD_COL):
         self.pixels = pixels
         self.key = key 
         self.oldPixels = oldPixels
@@ -41,8 +42,7 @@ class ClockController:
 
 
     def __init__(self):
-        # self.birthday = ""
-        # self.showClock = True
+        self.birthDate = (6,14) # (month, day)
 
         self.controller = PixelController()
         self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
@@ -55,10 +55,7 @@ class ClockController:
     
     def clock(self):
         print("CLOCK")
-        def translate_to_12h_clock_format(h):
-            if h > 12:
-                return h % 12
-            return h
+        
         
 
         try:
@@ -102,9 +99,27 @@ class ClockController:
                         self.changeQueue.append(
                             ChangePixels(currentWord, DEF_TIME_WORDS,oldWord)
                         )
+                    
+                    #hour like 1, 2, 3 etc.
+                    # DEF_HOUR_WORD_REP
+                    currentHourWord = hour_wording_rep(min, hour)
+                    oldHourWord = self.pixelStatus.get(DEF_HOUR_WORD_REP)
+                    if currentHourWord != oldHourWord:
+                        self.changeQueue.append(
+                            ChangePixels(currentHourWord, DEF_HOUR_WORD_REP, oldHourWord)
+                        )
+                    
+                    #check for birthday
+                    old_bd = self.pixelStatus.get(DEF_BIRTHDAY)
+                    cur_bd = []
+                    if m == self.birthDate[0] and d == self.birthDate[1]:
+                        #its her birthday
+                        cur_bd  = WD_HAPPY_BD + WD_CHARLY
+
+                    if old_bd != cur_bd:
+                        self.changeQueue.append(ChangePixels(cur_bd, DEF_BIRTHDAY, old_bd, (28,217,230)))
 
 
-                       
 
 
                     
@@ -115,14 +130,6 @@ class ClockController:
                 elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_NIGHT:
                     pass
                 
-                elif self.currentClockState == CLOCK_STATE_SHOW_HAPPY_BIRTHDAY:
-                    pass
-                    
-
-
-                # for i in self.changeQueue:
-                #     # print(i)
-                #     pass
                 
                 print("++++ len of change queue is: ", len(self.changeQueue))
                 self.workThroughQueue()
@@ -158,11 +165,12 @@ class ClockController:
 
         while len(self.changeQueue) > 0:
             p = self.changeQueue.pop()
-            self.controller.activatePixelsRGB(p.pixels, *p.color)
+            
             #deactive old pixels
             if p.oldPixels:
                 self.controller.deactivatePixels(p.oldPixels)
 
+            self.controller.activatePixelsRGB(p.pixels, *p.color)
             self.pixelStatus[p.key] = p.pixels
 
         
