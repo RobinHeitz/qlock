@@ -55,4 +55,38 @@ _ALL_WD_DEFS = [
     WD_IT_IS,
     WD_5_1,
     WD_10_1,
+    WD_10_1,
+    WD_20_1,
+    WD_three_quarter,
+    WD_quarter,
+    WD_3_1,
+    WD_before,
+    WD_after,
+    WD_GOOD_NIGHT,
+    WD_HALF,
+    WD_11,
+    WD_5_2,
+    WD_HAPPY_BD,
+    WD_1,
+    WD_1_O_CLOCK,
+    WD_2,
+    WD_3_2,
+    WD_4,
+    WD_6,
+    WD_8,
+    WD_7,
+    WD_12,
+    WD_GOOD_MORNING,
+    WD_CHARLY,
+    WD_10_2,
+    WD_9,
+    WD_CLOCK,
+    WD_MIN_1, WD_MIN_2, WD_MIN_3, WD_MIN_4,
 ]
+
+PIXELS = []
+
+for i in _ALL_WD_DEFS:
+    PIXELS = PIXELS + i
+
+WD_ALL_PIXELS = set(PIXELS)

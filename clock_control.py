@@ -5,7 +5,7 @@ from pixel_definition import (
     HOUR_DEF, MIN_POINTS_DEF, WD_10_1, WD_2, WD_20_1, WD_5_1, WD_MIN_4, WD_IT_IS,WD_1_O_CLOCK,WD_CLOCK,
     WD_5_MIN_AFTER,WD_10_MIN_AFTER,WD_15_MIN_AFTER,WD_20_MIN_AFTER,WD_5_MIN_BEFORE_HALF,WD_HALF,
     WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_before, WD_quarter,
-    WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_GOOD_NIGHT,WD_GOOD_MORNING
+    WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_GOOD_NIGHT,WD_GOOD_MORNING,WD_ALL_PIXELS
     )
 from pixel_controller import PixelController
 
@@ -108,6 +108,7 @@ def handle_birthday(controller, isBirthday=False):
 if __name__ == "__main__":
     
 
+    print(WD_ALL_PIXELS)
     birthday = False
     isGoodMorningActivated = False
     isGoodNightActivated = False
