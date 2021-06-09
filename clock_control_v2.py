@@ -9,11 +9,24 @@ from pixel_definition import (
     )
 from pixel_controller import PixelController
 
+from dataclasses import dataclass
 
 CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
 CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 CLOCK_STATE_SHOW_HAPPY_BIRTHDAY = "CLOCK_STATE_SHOW_HAPPY_BIRTHDAY"
+
+STD_COL = (255,255,255)
+
+DEF_MIN_DOTS = "DEF_MIN_DOTS"
+
+@dataclass
+class ChangePixels:
+    pixels: list
+    color: tuple = (0,0,0)
+
+
+
 
 class ClockController:
 
@@ -25,7 +38,8 @@ class ClockController:
         self.controller = PixelController()
         self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
 
-        self.pixelStatus = dict()
+        self.pixelStatus = {}
+        self.changeQueue = []
 
         self.clock()
 
@@ -53,17 +67,32 @@ class ClockController:
                 min = local_time.minute
 
 
+                self.determineClockState()
+                
+
+                
                 if self.currentClockState == CLOCK_STATE_SHOW_CLOCK_TIME:
+                    min_points = min % 5
+                    if min_points != self.pixelStatus.get(DEF_MIN_DOTS):
+                        self.changeQueue.append(
+                            ChangePixels(MIN_POINTS_DEF.get(min_points),*STD_COL)
+                        )
+
+                    
+
+                elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_MORNING:
                     pass
+                
+                elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_NIGHT:
+                    pass
+                
+                elif self.currentClockState == CLOCK_STATE_SHOW_HAPPY_BIRTHDAY:
+                    pass
+                    
 
 
-
-                if local_time.isoweekday() <= 5:
-                    #its weekday
-                    pass
-                else:
-                    #weekend
-                    pass
+                
+                print(self.changeQueue)
                 
                 
 
@@ -81,14 +110,16 @@ class ClockController:
             self.shutdown_all_pixels()
 
 
-
-    
-    
-
-
     def shutdown_all_pixels(self):
         """Called once after time change, clears Pixels"""
         self.controller.deactivatePixels(WD_ALL_PIXELS)
+
+
+
+    def determineClockState(self):
+        
+        self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
+    
 
 
 
