@@ -217,64 +217,64 @@ if __name__ == "__main__":
 
     controller = PixelController()
     
-    try:
-        while True:
-            utc = pytz.timezone('UTC')
-            now = utc.localize(datetime.utcnow())
+    # try:
+    #     while True:
+    #         utc = pytz.timezone('UTC')
+    #         now = utc.localize(datetime.utcnow())
 
-            local_tz = pytz.timezone('Europe/Berlin')
-            local_time = now.astimezone(local_tz)
+    #         local_tz = pytz.timezone('Europe/Berlin')
+    #         local_time = now.astimezone(local_tz)
 
-            y = local_time.year
-            m = local_time.month
-            d = local_time.day
-            hour_pre_transform = local_time.hour
-            min = local_time.minute
-            hour = translate_to_12h_clock(hour_pre_transform)
+    #         y = local_time.year
+    #         m = local_time.month
+    #         d = local_time.day
+    #         hour_pre_transform = local_time.hour
+    #         min = local_time.minute
+    #         hour = translate_to_12h_clock(hour_pre_transform)
 
-            if m == BIRTH_DAY[0] and d == BIRTH_DAY[1]:
-                birthday = True
+    #         if m == BIRTH_DAY[0] and d == BIRTH_DAY[1]:
+    #             birthday = True
             
 
-            #check whether its time to say good morning:
-            if local_time.isoweekday() <= 5:
-                morning_time_start = local_time.replace(hour=6, minute=30, second=0, microsecond=0)
-                morning_time_end = local_time.replace(hour=6, minute=45, second=0, microsecond=0)
-                night_time_start = local_time.replace(hour=22, minute=0, second=0, microsecond=0)
-                night_time_end = local_time.replace(hour=22, minute=15, second=0, microsecond=0)
-            else:
-                morning_time_start = local_time.replace(hour=9, minute=30, second=0, microsecond=0)
-                morning_time_end = local_time.replace(hour=10, minute=30, second=0, microsecond=0)
-                night_time_start = local_time.replace(hour=22, minute=0, second=0, microsecond=0)
-                night_time_end = local_time.replace(hour=22, minute=15, second=0, microsecond=0)
+    #         #check whether its time to say good morning:
+    #         if local_time.isoweekday() <= 5:
+    #             morning_time_start = local_time.replace(hour=6, minute=30, second=0, microsecond=0)
+    #             morning_time_end = local_time.replace(hour=6, minute=45, second=0, microsecond=0)
+    #             night_time_start = local_time.replace(hour=22, minute=0, second=0, microsecond=0)
+    #             night_time_end = local_time.replace(hour=22, minute=15, second=0, microsecond=0)
+    #         else:
+    #             morning_time_start = local_time.replace(hour=9, minute=30, second=0, microsecond=0)
+    #             morning_time_end = local_time.replace(hour=10, minute=30, second=0, microsecond=0)
+    #             night_time_start = local_time.replace(hour=22, minute=0, second=0, microsecond=0)
+    #             night_time_end = local_time.replace(hour=22, minute=15, second=0, microsecond=0)
 
-            if morning_time_start <= local_time < morning_time_end or night_time_start <= local_time < night_time_end:
-                #show morning routine
-                pass
+    #         if morning_time_start <= local_time < morning_time_end or night_time_start <= local_time < night_time_end:
+    #             #show morning routine
+    #             pass
 
 
             
 
 
 
-            activate_minute_dots(controller, min % 5)
+    #         activate_minute_dots(controller, min % 5)
 
-            activate_it_is(controller)
+    #         activate_it_is(controller)
 
-            activate_hour(controller,min, hour)
+    #         activate_hour(controller,min, hour)
 
-            activate_clock_words(controller, min, hour)
+    #         activate_clock_words(controller, min, hour)
 
-            # handle_birthday(controller, birthday)
+    #         # handle_birthday(controller, birthday)
 
-            # activate_charly(controller, birthday)
+    #         # activate_charly(controller, birthday)
 
-            # handle_good_morning_night(controller,min, hour, local_time)
+    #         # handle_good_morning_night(controller,min, hour, local_time)
 
-            activate_additional_words(controller, min, hour, birthday, local_time)
+    #         activate_additional_words(controller, min, hour, birthday, local_time)
                 
-            time.sleep(1)
+    #         time.sleep(1)
     
-    except KeyboardInterrupt:
-        controller.deactivatePixels(list(range(16**2)))
+    # except KeyboardInterrupt:
+    #     controller.deactivatePixels(list(range(16**2)))
 
