@@ -22,7 +22,7 @@ DEF_MIN_DOTS = "DEF_MIN_DOTS"
 
 @dataclass
 class ChangePixels:
-    pixels: list
+    pixels: list[int] 
     color: tuple = (0,0,0)
 
 
