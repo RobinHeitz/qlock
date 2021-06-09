@@ -10,6 +10,8 @@ WD_3_1 = [36,59,68,91]
 WD_before = [37,58,69]
 WD_after = [154,165,186,197]
 WD_GOOD_NIGHT = [90,101,122,133,154,165,186,197,218]
+WD_GOOD = WD_GOOD_NIGHT[:4]
+WD_NIGHT = WD_GOOD_NIGHT[4:]
 WD_HALF = [38,57,70,89]
 WD_11 = [121,134,153]
 WD_5_2 = [153,166,185,198]
@@ -63,6 +65,8 @@ _ALL_WD_DEFS = [
     WD_before,
     WD_after,
     WD_GOOD_NIGHT,
+    WD_GOOD,
+    WD_NIGHT,
     WD_HALF,
     WD_11,
     WD_5_2,

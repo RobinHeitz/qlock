@@ -5,14 +5,12 @@ from pixel_definition import (
     HOUR_DEF, MIN_POINTS_DEF, WD_10_1, WD_2, WD_20_1, WD_5_1, WD_MIN_4, WD_IT_IS,WD_1_O_CLOCK,WD_CLOCK,
     WD_5_MIN_AFTER,WD_10_MIN_AFTER,WD_15_MIN_AFTER,WD_20_MIN_AFTER,WD_5_MIN_BEFORE_HALF,WD_HALF,
     WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_before, WD_quarter,
-    WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_GOOD_NIGHT,WD_GOOD_MORNING,WD_ALL_PIXELS
+    WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_GOOD_NIGHT,WD_GOOD_MORNING,WD_ALL_PIXELS, WD_GOOD, WD_NIGHT,
     )
 from pixel_controller import PixelController
 
-ACTIVATE_WORD_CHARLY = False
 
-# BIRTH_DAY = (6,8) #month, day
-BIRTH_DAY = (6,14) #month, day
+
 
 def next_hour(current_h):
     if current_h == 23:
@@ -94,22 +92,25 @@ def activate_clock_words(controller, min, h):
         controller.deactivatePixels(WD_10_1)
 
 
-def handle_birthday(controller, isBirthday=False):
+def handle_birthday(controller, isBirthday, isBirthdayActivated):
     if isBirthday:
         controller.activatePixelsRGB(WD_HAPPY,28,217,230)
         controller.activatePixelsRGB(WD_BIRTHDAY,242,8,148)
         controller.activatePixelsRGB(WD_CHARLY,255,255,51)
     else:
-        controller.deactivatePixels(WD_HAPPY_BD)
-        controller.deactivatePixels(WD_CHARLY)
-        # controller.activatePixelsRGB(WD_HAPPY,255,0,0)
+        if isBirthdayActivated:
+            controller.deactivatePixels(WD_HAPPY_BD)
+            controller.deactivatePixels(WD_CHARLY)
+            isBirthdayActivated = False
 
 
 if __name__ == "__main__":
     
+    # BIRTH_DAY = (6,9) #month, day
+    BIRTH_DAY = (6,14) #month, day
 
-    print(WD_ALL_PIXELS)
-    birthday = False
+    # birthday = False
+    isBirthdayActivated = False
     isGoodMorningActivated = False
     isGoodNightActivated = False
 
@@ -134,37 +135,50 @@ if __name__ == "__main__":
 
             if m == BIRTH_DAY[0] and d == BIRTH_DAY[1]:
                 birthday = True
+                isBirthdayActivated = True
+            else: 
+                birthday= False
+
             
 
             #check whether its time to say good morning:
             if local_time.isoweekday() <= 5:
-                morning_time_start = local_time.replace(hour=10, minute=16, second=0, microsecond=0)
-                morning_time_end = local_time.replace(hour=10, minute=16, second=30, microsecond=0)
-                night_time_start = local_time.replace(hour=19, minute=44, second=0, microsecond=0)
-                night_time_end = local_time.replace(hour=19, minute=50, second=0, microsecond=0)
+                morning_time_start = local_time.replace(hour=10, minute=43, second=0, microsecond=0)
+                morning_time_end = local_time.replace(hour=10, minute=43, second=30, microsecond=0)
+                night_time_start = local_time.replace(hour=10, minute=44, second=0, microsecond=0)
+                night_time_end = local_time.replace(hour=10, minute=45, second=0, microsecond=0)
             else:
                 morning_time_start = local_time.replace(hour=9, minute=30, second=0, microsecond=0)
                 morning_time_end = local_time.replace(hour=10, minute=30, second=0, microsecond=0)
                 night_time_start = local_time.replace(hour=22, minute=0, second=0, microsecond=0)
                 night_time_end = local_time.replace(hour=22, minute=30, second=0, microsecond=0)
 
-            if morning_time_start <= local_time < morning_time_end:
+            
+            if morning_time_start <= local_time < morning_time_end and birthday is False:
                 #show morning routine
                 
                 if isShowingClock:
                     #deactivate all pixels first
-
+                    controller.deactivatePixels(WD_ALL_PIXELS)
                     isShowingClock = False
                 
                 
                 isGoodMorningActivated = True
-                controller.activatePixels(WD_GOOD_MORNING)
-                controller.activatePixels(WD_CHARLY)
+                controller.activatePixelsRGB(WD_GOOD_MORNING,0,255,128)
+                controller.activatePixelsRGB(WD_CHARLY,255,51,51)
             
-            elif night_time_start <= local_time < night_time_end:
+            elif night_time_start <= local_time < night_time_end and birthday is False:
+                #show good night routine
+
+                if isShowingClock:
+                    #deactivate all pixels first
+                    controller.deactivatePixels(WD_ALL_PIXELS)
+                    isShowingClock = False
+
                 isGoodNightActivated = True
-                controller.activatePixels(WD_GOOD_NIGHT)
-                controller.activatePixels(WD_CHARLY)
+                controller.activatePixelsRGB(WD_GOOD,255,128,0)
+                controller.activatePixelsRGB(WD_NIGHT,0,255,128)
+                controller.activatePixelsRGB(WD_CHARLY,255,51,51)
             
             
             
