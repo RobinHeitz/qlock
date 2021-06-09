@@ -25,24 +25,22 @@ class PixelController(object):
 
     def activatePixelRGB(self, pixel, *color):
         self.strip.setPixelColorRGB(pixel, *color)
-        # if show==True:
-            # self.strip.show()
 
     
-    # def activatePixels(self, pixels, show=True):
-    #     self.activatePixelsRGB(pixels, *self.color, show=show)
+    def activatePixels(self, pixels):
+        self.activatePixelsRGB(pixels, *self.color)
 
-    # def activatePixelsRGB(self, pixels, show=True, *args):
-    #     for p in pixels:
-    #         self.activatePixelRGB(p, *args, show=show)
+    def activatePixelsRGB(self, pixels, *args):
+        for p in pixels:
+            self.activatePixelRGB(p, *args)
         
-    #     self.strip.show()
+        self.strip.show()
 
 
-    # def deactivatePixels(self, pixels):
-    #     for p in pixels:
-    #         self.strip.setPixelColor(p, Color(0,0,0))
-    #     self.strip.show()
+    def deactivatePixels(self, pixels):
+        for p in pixels:
+            self.strip.setPixelColor(p, Color(0,0,0))
+        self.strip.show()
     
     def showPixels(self):
         self.strip.show()

@@ -51,37 +51,8 @@ WD_5_BEFORE = WD_5_1 + WD_before
 HOUR_DEF  = {1:WD_1,2:WD_2,3:WD_3_2,4:WD_4,5:WD_5_2,6:WD_6,7:WD_7,8:WD_8,9:WD_9,10:WD_10_2,11:WD_11,12:WD_12}
 MIN_POINTS_DEF = {1:WD_MIN_1,2:WD_MIN_2,3:WD_MIN_3,4:WD_MIN_4,0:WD_MIN_4 }
 
-
-WD_ALL = [
-    WD_IT_IS, 
-    WD_5_1, 
+_ALL_WD_DEFS = [
+    WD_IT_IS,
+    WD_5_1,
     WD_10_1,
-    WD_20_1,
-    WD_three_quarter, 
-    WD_quarter,
-    WD_before,
-    WD_after,
-    WD_3_1,
-    WD_GOOD_NIGHT, 
-    WD_HALF, 
-    WD_11, 
-    WD_5_2, 
-    WD_HAPPY_BD, 
-    WD_1,
-    WD_2, 
-    WD_3_2, 
-    WD_4,
-    WD_6, 
-    WD_7, 
-    WD_8, 
-    WD_12,
-    WD_GOOD_MORNING,
-    WD_CHARLY,
-    WD_10_2, 
-    WD_9, 
-    WD_CLOCK,
-    WD_MIN_1, 
-    WD_MIN_2, 
-    WD_MIN_3, 
-    WD_MIN_4,
-    ]
+]
