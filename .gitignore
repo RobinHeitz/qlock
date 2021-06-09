@@ -2,3 +2,4 @@ env/
 qlock-env/
 .vscode/
 *.pyc
+log.txt

@@ -105,10 +105,10 @@ def determineClockState(local_time):
         # self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
 
         if local_time.isoweekday() <= 5:
-            morning_time_start = local_time.replace(hour=18, minute=40, second=30, microsecond=0)
-            morning_time_end = local_time.replace(hour=18, minute=41, second=0, microsecond=0)
-            night_time_start = local_time.replace(hour=18, minute=41, second=30, microsecond=0)
-            night_time_end = local_time.replace(hour=18, minute=42, second=30, microsecond=0)
+            morning_time_start = local_time.replace(hour=19, minute=36, second=30, microsecond=0)
+            morning_time_end = local_time.replace(hour=19, minute=37, second=0, microsecond=0)
+            night_time_start = local_time.replace(hour=19, minute=37, second=30, microsecond=0)
+            night_time_end = local_time.replace(hour=19, minute=38, second=0, microsecond=0)
         else:
             morning_time_start = local_time.replace(hour=9, minute=30, second=0, microsecond=0)
             morning_time_end = local_time.replace(hour=10, minute=30, second=0, microsecond=0)
