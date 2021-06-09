@@ -158,6 +158,7 @@ class ClockControl:
             h = self.next_hour(hour)
 
         if h == 1:
+            print("ITS 1 o clock", WD_1_O_CLOCK)
             self.controller.activatePixels(WD_1_O_CLOCK)
             return
         
