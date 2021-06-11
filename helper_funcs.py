@@ -12,6 +12,16 @@ CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
 CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
+WEEKDAY_MORNING_START = (6,20) #hour, min
+WEEKDAY_MORNING_END = (6,45)
+WEEKDAY_NIGHT_START = (22,15)
+WEEKDAY_NIGHT_END = (22,30)
+
+WEEKEND_MORNING_START = (9,0)
+WEEKEND_MORNING_END = (10,0)
+WEEKEND_NIGHT_START = (22,30)
+WEEKEND_NIGHT_END = (23,0)
+
 def next_hour(current_h):
         if current_h == 23:
             return 0
@@ -27,93 +37,62 @@ def translate_to_12h_clock_format(h):
 def clock_words(min):
         if 0 <= min < 5:
             return []
-            # self.controller.deactivatePixels(WD_5_BEFORE)
         elif 5 <= min < 10:
             return WD_5_MIN_AFTER
-            # self.controller.activatePixels(WD_5_MIN_AFTER)
-            # self.controller.deactivatePixels(WD_CLOCK)
         elif 10 <= min < 15:
             return WD_10_MIN_AFTER
-            # self.controller.activatePixels(WD_10_MIN_AFTER)
-            # self.controller.deactivatePixels(WD_5_1)
         elif 15 <= min < 20:
             return WD_15_MIN_AFTER
-            # self.controller.activatePixels(WD_15_MIN_AFTER)
-            # self.controller.deactivatePixels(WD_10_1)
         elif 20 <= min < 25:
             return WD_20_MIN_AFTER
-            # self.controller.activatePixels(WD_20_MIN_AFTER)
-            # self.controller.deactivatePixels(WD_quarter)
         elif 25<= min < 30:
             return WD_5_MIN_BEFORE_HALF
-            # self.controller.activatePixels(WD_5_MIN_BEFORE_HALF)
-            # self.controller.deactivatePixels(WD_20_1)
-            # self.controller.deactivatePixels(WD_after)
         elif 30<= min < 35:
             return WD_HALF
-            # self.controller.activatePixels(WD_HALF)
-            # self.controller.deactivatePixels(WD_5_1+WD_before)
         elif 35<= min < 40:
             return WD_5_MIN_AFTER_HALF
-            # self.controller.activatePixels(WD_5_MIN_AFTER_HALF)
         elif 40<= min < 45:
             return WD_20_BEFORE
-            # self.controller.activatePixels(WD_20_BEFORE)
-            # self.controller.deactivatePixels(WD_5_MIN_AFTER_HALF)
         elif 45<= min < 50:
             return WD_15_BEFORE
-            # self.controller.activatePixels(WD_15_BEFORE)
-            # self.controller.deactivatePixels(WD_20_1)
         elif 50<= min < 55:
             return WD_10_BEFORE
-            # self.controller.activatePixels(WD_10_BEFORE)
-            # self.controller.deactivatePixels(WD_quarter)
         elif min >= 55:
             return WD_5_BEFORE
-            # self.controller.activatePixels(WD_5_BEFORE)
-            # self.controller.deactivatePixels(WD_10_1)
-
 
 
 def hour_wording_rep(min,hour):
+    
     returnPixels = []
     
     if min >= 25:
-        hour = next_hour(hour)
+        hour = translate_to_12h_clock_format(next_hour(hour))
 
     if hour == 1 and min < 5:
-        # self.controller.activatePixels(WD_1_O_CLOCK)
         returnPixels = returnPixels + WD_1_O_CLOCK
     else:
-        returnPixels = returnPixels + HOUR_DEF.get(hour)
+        returnPixels = returnPixels + HOUR_DEF.get(hour,[])
     
-    # pixels = HOUR_DEF.get(h)
-    # print("hour activation: pixels=", pixels)
-    # self.controller.activatePixels(pixels)
-
     if min < 5:
         #display 'UHR' additionally
         returnPixels = returnPixels + WD_CLOCK
-        # self.controller.activatePixels(WD_CLOCK)
-
     return returnPixels
 
 
 
 def determineClockState(local_time):
         newState = None
-        # self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
 
         if local_time.isoweekday() <= 5:
-            morning_time_start = local_time.replace(hour=19, minute=36, second=30, microsecond=0)
-            morning_time_end = local_time.replace(hour=19, minute=37, second=0, microsecond=0)
-            night_time_start = local_time.replace(hour=19, minute=37, second=30, microsecond=0)
-            night_time_end = local_time.replace(hour=19, minute=38, second=0, microsecond=0)
+            morning_time_start = local_time.replace(hour=WEEKDAY_MORNING_START[0], minute=WEEKDAY_MORNING_START[1], second=0, microsecond=0)
+            morning_time_end = local_time.replace(hour=WEEKDAY_MORNING_END[0], minute=WEEKDAY_MORNING_END[1], second=0, microsecond=0)
+            night_time_start = local_time.replace(hour=WEEKDAY_NIGHT_START[0], minute=WEEKDAY_NIGHT_START[1], second=0, microsecond=0)
+            night_time_end = local_time.replace(hour=WEEKDAY_NIGHT_END[0], minute=WEEKDAY_NIGHT_END[1], second=0, microsecond=0)
         else:
-            morning_time_start = local_time.replace(hour=9, minute=30, second=0, microsecond=0)
-            morning_time_end = local_time.replace(hour=10, minute=30, second=0, microsecond=0)
-            night_time_start = local_time.replace(hour=22, minute=15, second=0, microsecond=0)
-            night_time_end = local_time.replace(hour=22, minute=30, second=0, microsecond=0)
+            morning_time_start = local_time.replace(hour=WEEKEND_MORNING_START[0], minute=WEEKDAY_MORNING_START[1], second=0, microsecond=0)
+            morning_time_end = local_time.replace(hour=WEEKEND_MORNING_END[0], minute=WEEKEND_MORNING_END[1], second=0, microsecond=0)
+            night_time_start = local_time.replace(hour=WEEKEND_NIGHT_START[0], minute=WEEKEND_NIGHT_START[1], second=0, microsecond=0)
+            night_time_end = local_time.replace(hour=WEEKEND_NIGHT_END[0], minute=WEEKEND_NIGHT_END[1], second=0, microsecond=0)
         
         if morning_time_start <= local_time < morning_time_end:
             newState = CLOCK_STATE_SHOW_GOOD_MORNING

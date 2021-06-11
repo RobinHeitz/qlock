@@ -62,14 +62,13 @@ class ClockController:
     
     def clock(self):
         print("CLOCK")
-        
+
         with open("log.txt", "w") as log:
             import sys
             sys.stdout = log
-
+        
             try:
                 while True:
-                    # print("WHILE-LOOP", self.pixelStatus)
                     
                     utc = pytz.timezone('UTC')
                     now = utc.localize(datetime.utcnow())
