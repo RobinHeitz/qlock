@@ -3,3 +3,4 @@ qlock-env/
 .vscode/
 *.pyc
 log.txt
+/__pycache__/
