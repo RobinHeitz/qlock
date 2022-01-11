@@ -17,3 +17,7 @@
 - Housing made with a 3d-printer
 - other parts: laser-cutted wooden plates
 
+# Additional:
+- disable audio: sudo nano /etc/modprobe.d/snd-blacklist.conf add 'blacklist snd_bcm2835'
+- in sudo nano /boot/config.txt, comment out 'dtparam=audio=on'
+- sudo reboot

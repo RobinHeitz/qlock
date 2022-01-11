@@ -12,6 +12,7 @@ from pixel_controller import PixelController
 
 from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
+import rtc
 
 CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
@@ -81,7 +82,14 @@ class ClockController:
                     d = local_time.day
                     hour = translate_to_12h_clock_format(local_time.hour)
                     min = local_time.minute
+                    second = local_time.second
 
+                    if min == 0 and second == 0:
+                        # update RTC's time every hour
+                        print("#######")
+                        print("Updating pi time from rtc")
+                        print("#######")
+                        rtc.update_pi_time_from_rtc()
 
                     
                     newClockState = determineClockState(local_time)

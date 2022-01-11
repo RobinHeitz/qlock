@@ -4,3 +4,5 @@ qlock-env/
 *.pyc
 log.txt
 /__pycache__/
+
+*.log
