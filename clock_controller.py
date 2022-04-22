@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import traceback
 import pytz
 import time
@@ -11,6 +12,15 @@ from pixel_definition import (
 from pixel_controller import PixelController
 
 from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
+
+
+logging.basicConfig(filename="logging.log",
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.DEBUG)
+
+logger = logging.getLogger('urbanGUI')
 
 
 CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
@@ -48,6 +58,7 @@ class ClockController:
 
 
     def __init__(self):
+        logger.info("ClockController init method")
         self.birthDate = (6,14) # (month, day)
         # self.birthDate = (6,9) # (month, day)
 
@@ -61,123 +72,114 @@ class ClockController:
 
     
     def clock(self):
-        print("CLOCK")
+    
+        try:
+            while True:
+                
+                utc = pytz.timezone('UTC')
+                now = utc.localize(datetime.utcnow())
 
-        with open("log.txt", "w") as log:
-            import sys
-            sys.stdout = log
-        
-            try:
-                while True:
-                    
-                    utc = pytz.timezone('UTC')
-                    now = utc.localize(datetime.utcnow())
+                local_tz = pytz.timezone('Europe/Berlin')
+                local_time = now.astimezone(local_tz)
 
-                    local_tz = pytz.timezone('Europe/Berlin')
-                    local_time = now.astimezone(local_tz)
-
-                    y = local_time.year
-                    m = local_time.month
-                    d = local_time.day
-                    hour = translate_to_12h_clock_format(local_time.hour)
-                    min = local_time.minute
-
-
-                    
-                    newClockState = determineClockState(local_time)
-                    if newClockState != self.currentClockState:
-                        self.currentClockState = newClockState
-                        print("*** new current clockstate:", self.currentClockState)
-                        self.deactivate_active_pixels()
+                y = local_time.year
+                m = local_time.month
+                d = local_time.day
+                hour = translate_to_12h_clock_format(local_time.hour)
+                min = local_time.minute
 
                 
+                newClockState = determineClockState(local_time)
+                if newClockState != self.currentClockState:
+                    self.currentClockState = newClockState
+                    logging.info(f"New current clockstate: {self.currentClockState}")
+                    self.deactivate_active_pixels()
+
                 
+                if self.currentClockState == CLOCK_STATE_SHOW_CLOCK_TIME:
                     
+                    #min dots
+                    min_pixels = MIN_POINTS_DEF.get(min % 5)
+                    old_min_pixels = self.pixelStatus.get(DEF_MIN_DOTS)
                     
-                    if self.currentClockState == CLOCK_STATE_SHOW_CLOCK_TIME:
-                        
-                        #min dots
-                        min_pixels = MIN_POINTS_DEF.get(min % 5)
-                        old_min_pixels = self.pixelStatus.get(DEF_MIN_DOTS)
-                        
-                        if min_pixels != old_min_pixels:
-                            self.changeQueue.append(ChangePixels(min_pixels, DEF_MIN_DOTS, old_min_pixels))
+                    if min_pixels != old_min_pixels:
+                        self.changeQueue.append(ChangePixels(min_pixels, DEF_MIN_DOTS, old_min_pixels))
 
-                        #it is
-                        if self.pixelStatus.get(DEF_IT_IS) is None:
-                            self.changeQueue.append(ChangePixels(WD_IT_IS,DEF_IT_IS))
+                    #it is
+                    if self.pixelStatus.get(DEF_IT_IS) is None:
+                        self.changeQueue.append(ChangePixels(WD_IT_IS,DEF_IT_IS))
 
-                        #timing words, like 15 min before, half etc.
-                        currentWord = clock_words(min)
-                        oldWord =self.pixelStatus.get(DEF_TIME_WORDS)
-                        if oldWord != currentWord:
-                            #need change clock word
-                            self.changeQueue.append(
-                                ChangePixels(currentWord, DEF_TIME_WORDS,oldWord)
-                            )
-                        
-                        #hour like 1, 2, 3 etc.
-                        # DEF_HOUR_WORD_REP
-                        currentHourWord = hour_wording_rep(min, hour)
-                        oldHourWord = self.pixelStatus.get(DEF_HOUR_WORD_REP)
-                        if currentHourWord != oldHourWord:
-                            self.changeQueue.append(
-                                ChangePixels(currentHourWord, DEF_HOUR_WORD_REP, oldHourWord)
-                            )
-                        
-                        #check for birthday
-                        old_bd = self.pixelStatus.get(DEF_BIRTHDAY)
-                        cur_bd = []
-                        if m == self.birthDate[0] and d == self.birthDate[1]:
-                            #its her birthday
-                            cur_bd  = WD_HAPPY_BD + WD_CHARLY
-
-                        if old_bd != cur_bd:
-                            self.changeQueue.append(ChangePixels(cur_bd, DEF_BIRTHDAY, old_bd, (28,217,230)))
-
-
-
-
-                        
-
-                    elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_MORNING:
-                        
-                        old_gm_pixels = self.pixelStatus.get(DEF_GOOD_MORNING)
-                        cur_gm_pixels = WD_GOOD_MORNING +  WD_CHARLY
-                        
-                        if old_gm_pixels != cur_gm_pixels:
-
-                            self.changeQueue.append(
-                                ChangePixels(cur_gm_pixels, DEF_GOOD_MORNING)
-                            )
+                    #timing words, like 15 min before, half etc.
+                    currentWord = clock_words(min)
+                    oldWord =self.pixelStatus.get(DEF_TIME_WORDS)
+                    if oldWord != currentWord:
+                        #need change clock word
+                        self.changeQueue.append(
+                            ChangePixels(currentWord, DEF_TIME_WORDS,oldWord)
+                        )
                     
+                    #hour like 1, 2, 3 etc.
+                    # DEF_HOUR_WORD_REP
+                    currentHourWord = hour_wording_rep(min, hour)
+                    oldHourWord = self.pixelStatus.get(DEF_HOUR_WORD_REP)
+                    if currentHourWord != oldHourWord:
+                        self.changeQueue.append(
+                            ChangePixels(currentHourWord, DEF_HOUR_WORD_REP, oldHourWord)
+                        )
                     
-                    
-                    
-                    elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_NIGHT:
-                        
-                        old_gn_pixels = self.pixelStatus.get(DEF_GOOD_NIGHT)
-                        cur_gn_pixels = WD_GOOD_NIGHT + WD_CHARLY
+                    #check for birthday
+                    old_bd = self.pixelStatus.get(DEF_BIRTHDAY)
+                    cur_bd = []
+                    if m == self.birthDate[0] and d == self.birthDate[1]:
+                        #its her birthday
+                        cur_bd  = WD_HAPPY_BD + WD_CHARLY
 
-                        if old_gn_pixels != cur_gn_pixels:
-                            self.changeQueue.append(
-                                ChangePixels(cur_gn_pixels, DEF_GOOD_NIGHT)
-                            )
-                    
-                    if len(self.changeQueue) > 0: 
-                        print("+++ len of queue:", len(self.changeQueue), datetime.now().strftime("%H:%M:%S"))
-                    self.workThroughQueue()
+                    if old_bd != cur_bd:
+                        self.changeQueue.append(ChangePixels(cur_bd, DEF_BIRTHDAY, old_bd, (28,217,230)))
+
+
+
+
                     
 
-
-                    time.sleep(1)
-
-            except KeyboardInterrupt:
-                self.deactivate_active_pixels()
-            except Exception as e:
-                    traceback.print_exc(file=log)
+                elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_MORNING:
                     
-        
+                    old_gm_pixels = self.pixelStatus.get(DEF_GOOD_MORNING)
+                    cur_gm_pixels = WD_GOOD_MORNING +  WD_CHARLY
+                    
+                    if old_gm_pixels != cur_gm_pixels:
+
+                        self.changeQueue.append(
+                            ChangePixels(cur_gm_pixels, DEF_GOOD_MORNING)
+                        )
+                
+                
+                
+                
+                elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_NIGHT:
+                    
+                    old_gn_pixels = self.pixelStatus.get(DEF_GOOD_NIGHT)
+                    cur_gn_pixels = WD_GOOD_NIGHT + WD_CHARLY
+
+                    if old_gn_pixels != cur_gn_pixels:
+                        self.changeQueue.append(
+                            ChangePixels(cur_gn_pixels, DEF_GOOD_NIGHT)
+                        )
+                
+                if len(self.changeQueue) > 0: 
+                    print("+++ len of queue:", len(self.changeQueue), datetime.now().strftime("%H:%M:%S"))
+                self.workThroughQueue()
+                
+
+
+                time.sleep(1)
+
+        except KeyboardInterrupt:
+            self.deactivate_active_pixels()
+        except Exception as e:
+            logging.error(f"Exception occured, print(e) = {e}, tracepack = {traceback.print_exc()}")
+                
+    
     def deactivate_active_pixels(self):
         """Called once after time change, clears Pixels"""
         # self.controller.deactivatePixels(WD_ALL_PIXELS)
