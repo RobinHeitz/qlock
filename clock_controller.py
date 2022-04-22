@@ -76,7 +76,6 @@ class ClockController:
     
     def clock(self):
 
-<<<<<<< HEAD
     
         try:
             while True:
@@ -86,21 +85,6 @@ class ClockController:
 
                 local_tz = pytz.timezone('Europe/Berlin')
                 local_time = now.astimezone(local_tz)
-=======
-                    y = local_time.year
-                    m = local_time.month
-                    d = local_time.day
-                    hour = translate_to_12h_clock_format(local_time.hour)
-                    min = local_time.minute
-                    second = local_time.second
-
-                    if min == 0 and second == 0:
-                        # update RTC's time every hour
-                        print("#######")
-                        print("Updating pi time from rtc")
-                        print("#######")
-                        rtc.update_pi_time_from_rtc()
->>>>>>> bfa6669b52686811557bf640621054c4ecc86dc8
 
                 y = local_time.year
                 m = local_time.month
