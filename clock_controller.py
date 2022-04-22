@@ -68,10 +68,13 @@ class ClockController:
         self.pixelStatus = {}
         self.changeQueue = []
 
+        self.clock_print_timer = 0
+
         self.clock()
 
     
     def clock(self):
+
     
         try:
             while True:
@@ -88,6 +91,9 @@ class ClockController:
                 hour = translate_to_12h_clock_format(local_time.hour)
                 min = local_time.minute
 
+                self.clock_print_timer += 1
+                if self.clock_print_timer > 60*30:
+                    logging.info(f"def clock() (localized) at hh:mm --> {hour}:{min}")
                 
                 newClockState = determineClockState(local_time)
                 if newClockState != self.currentClockState:
@@ -123,6 +129,7 @@ class ClockController:
                     currentHourWord = hour_wording_rep(min, hour)
                     oldHourWord = self.pixelStatus.get(DEF_HOUR_WORD_REP)
                     if currentHourWord != oldHourWord:
+                        logging.info(f"New hour word to show: {currentHourWord}")
                         self.changeQueue.append(
                             ChangePixels(currentHourWord, DEF_HOUR_WORD_REP, oldHourWord)
                         )
@@ -167,7 +174,7 @@ class ClockController:
                         )
                 
                 if len(self.changeQueue) > 0: 
-                    print("+++ len of queue:", len(self.changeQueue), datetime.now().strftime("%H:%M:%S"))
+                    logging.info("+++ len of queue:", len(self.changeQueue), datetime.now().strftime("%H:%M:%S"))
                 self.workThroughQueue()
                 
 
