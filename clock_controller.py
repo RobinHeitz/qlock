@@ -76,9 +76,8 @@ class ClockController:
     
     def clock(self):
 
-    
-        try:
-            while True:
+        while True:
+            try:
                 
                 utc = pytz.timezone('UTC')
                 now = utc.localize(datetime.utcnow())
@@ -94,12 +93,12 @@ class ClockController:
 
                 self.clock_print_timer += 1
                 if self.clock_print_timer > 60*30:
-                    logging.info(f"def clock() (localized) at hh:mm --> {hour}:{min}")
+                    logger.info(f"def clock() (localized) at hh:mm --> {hour}:{min}")
                 
                 newClockState = determineClockState(local_time)
                 if newClockState != self.currentClockState:
                     self.currentClockState = newClockState
-                    logging.info(f"New current clockstate: {self.currentClockState}")
+                    logger.info(f"New current clockstate: {self.currentClockState}")
                     self.deactivate_active_pixels()
 
                 
@@ -130,7 +129,7 @@ class ClockController:
                     currentHourWord = hour_wording_rep(min, hour)
                     oldHourWord = self.pixelStatus.get(DEF_HOUR_WORD_REP)
                     if currentHourWord != oldHourWord:
-                        logging.info(f"New hour word to show: {currentHourWord}")
+                        logger.info(f"New hour word to show: {currentHourWord}")
                         self.changeQueue.append(
                             ChangePixels(currentHourWord, DEF_HOUR_WORD_REP, oldHourWord)
                         )
@@ -175,17 +174,19 @@ class ClockController:
                         )
                 
                 if len(self.changeQueue) > 0: 
-                    logging.info("+++ len of queue:", len(self.changeQueue), datetime.now().strftime("%H:%M:%S"))
+                    logger.info("+++ len of queue:", len(self.changeQueue), datetime.now().strftime("%H:%M:%S"))
                 self.workThroughQueue()
                 
 
 
                 time.sleep(1)
 
-        except KeyboardInterrupt:
-            self.deactivate_active_pixels()
-        except Exception as e:
-            logging.error(f"Exception occured, print(e) = {e}, tracepack = {traceback.print_exc()}")
+            except KeyboardInterrupt:
+                self.deactivate_active_pixels()
+            
+            except Exception as e:
+                logger.error(f"Exception occured, print(e) = {e}, tracepack = {traceback.print_exc()}")
+                self.deactivate_active_pixels()
                 
     
     def deactivate_active_pixels(self):
