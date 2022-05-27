@@ -13,7 +13,7 @@ from pixel_controller import PixelController
 
 from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
-import rtc
+# import rtc
 
 logging.basicConfig(filename="logging.log",
                     filemode='a',
