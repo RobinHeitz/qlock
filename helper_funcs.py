@@ -83,6 +83,10 @@ def hour_wording_rep(min,hour):
 def determineClockState(local_time):
         newState = None
 
+        # trying stuff out for bugfixing
+
+        return CLOCK_STATE_SHOW_CLOCK_TIME
+
         if local_time.isoweekday() <= 5:
             morning_time_start = local_time.replace(hour=WEEKDAY_MORNING_START[0], minute=WEEKDAY_MORNING_START[1], second=0, microsecond=0)
             morning_time_end = local_time.replace(hour=WEEKDAY_MORNING_END[0], minute=WEEKDAY_MORNING_END[1], second=0, microsecond=0)
