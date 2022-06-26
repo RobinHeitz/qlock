@@ -87,19 +87,25 @@ def determineClockState(local_time, only_show_clock_state = True):
         print("determineClockState, only_show_clock_state is:", only_show_clock_state)
         newState = None
 
-        # trying stuff out for bugfixing
 
 
+        # morning routine:
         if local_time.isoweekday() <= 5:
             morning_time_start = local_time.replace(hour=WEEKDAY_MORNING_START[0], minute=WEEKDAY_MORNING_START[1], second=0, microsecond=0)
             morning_time_end = local_time.replace(hour=WEEKDAY_MORNING_END[0], minute=WEEKDAY_MORNING_END[1], second=0, microsecond=0)
-            night_time_start = local_time.replace(hour=WEEKDAY_NIGHT_START[0], minute=WEEKDAY_NIGHT_START[1], second=0, microsecond=0)
-            night_time_end = local_time.replace(hour=WEEKDAY_NIGHT_END[0], minute=WEEKDAY_NIGHT_END[1], second=0, microsecond=0)
         else:
             morning_time_start = local_time.replace(hour=WEEKEND_MORNING_START[0], minute=WEEKDAY_MORNING_START[1], second=0, microsecond=0)
             morning_time_end = local_time.replace(hour=WEEKEND_MORNING_END[0], minute=WEEKEND_MORNING_END[1], second=0, microsecond=0)
+        
+        # night routine
+        if 5 <= local_time.isoweekday() <= 6:
             night_time_start = local_time.replace(hour=WEEKEND_NIGHT_START[0], minute=WEEKEND_NIGHT_START[1], second=0, microsecond=0)
             night_time_end = local_time.replace(hour=WEEKEND_NIGHT_END[0], minute=WEEKEND_NIGHT_END[1], second=0, microsecond=0)
+
+        else:
+            night_time_start = local_time.replace(hour=WEEKDAY_NIGHT_START[0], minute=WEEKDAY_NIGHT_START[1], second=0, microsecond=0)
+            night_time_end = local_time.replace(hour=WEEKDAY_NIGHT_END[0], minute=WEEKDAY_NIGHT_END[1], second=0, microsecond=0)
+
         
         print("morning time start/end = ", morning_time_start, morning_time_end)
         print("night time start/end = ", night_time_start, night_time_end)
