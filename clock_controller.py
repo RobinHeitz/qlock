@@ -1,5 +1,4 @@
 from datetime import datetime
-import logging
 import traceback
 import pytz
 import time
@@ -12,16 +11,6 @@ from pixel_definition import (
 from pixel_controller import PixelController
 
 from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
-
-# import rtc
-
-logging.basicConfig(filename="logging.log",
-                    filemode='a',
-                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                    datefmt='%H:%M:%S',
-                    level=logging.DEBUG)
-
-logger = logging.getLogger('urbanGUI')
 
 
 CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
@@ -59,7 +48,6 @@ class ClockController:
 
 
     def __init__(self):
-        logger.info("ClockController init method")
         self.birthDate = (6,14) # (month, day)
         # self.birthDate = (6,9) # (month, day)
 
@@ -69,7 +57,6 @@ class ClockController:
         self.pixelStatus = {}
         self.changeQueue = []
 
-        self.clock_print_timer = 0
 
         self.clock()
 
@@ -91,14 +78,9 @@ class ClockController:
                 hour = translate_to_12h_clock_format(local_time.hour)
                 min = local_time.minute
 
-                self.clock_print_timer += 1
-                if self.clock_print_timer > 60*30:
-                    logger.info(f"def clock() (localized) at hh:mm --> {hour}:{min}")
-                
                 newClockState = determineClockState(local_time,only_show_clock_state=False)
                 if newClockState != self.currentClockState:
                     self.currentClockState = newClockState
-                    logger.info(f"New current clockstate: {self.currentClockState}")
                     self.deactivate_active_pixels()
 
                 
@@ -129,7 +111,6 @@ class ClockController:
                     currentHourWord = hour_wording_rep(min, hour)
                     oldHourWord = self.pixelStatus.get(DEF_HOUR_WORD_REP)
                     if currentHourWord != oldHourWord:
-                        logger.info(f"New hour word to show: {currentHourWord}")
                         self.changeQueue.append(
                             ChangePixels(currentHourWord, DEF_HOUR_WORD_REP, oldHourWord)
                         )
@@ -173,8 +154,6 @@ class ClockController:
                             ChangePixels(cur_gn_pixels, DEF_GOOD_NIGHT)
                         )
                 
-                if len(self.changeQueue) > 0: 
-                    logger.info("+++ len of queue:", len(self.changeQueue), datetime.now().strftime("%H:%M:%S"))
                 self.workThroughQueue()
                 
 
@@ -185,7 +164,7 @@ class ClockController:
                 self.deactivate_active_pixels()
             
             except Exception as e:
-                logger.error(f"Exception occured, print(e) = {e}, tracepack = {traceback.print_exc()}")
+                print(f"Exception occured, print(e) = {e}")
                 self.deactivate_active_pixels()
                 
     
