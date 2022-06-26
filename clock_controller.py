@@ -95,7 +95,7 @@ class ClockController:
                 if self.clock_print_timer > 60*30:
                     logger.info(f"def clock() (localized) at hh:mm --> {hour}:{min}")
                 
-                newClockState = determineClockState(local_time)
+                newClockState = determineClockState(local_time,only_show_clock_state=False)
                 if newClockState != self.currentClockState:
                     self.currentClockState = newClockState
                     logger.info(f"New current clockstate: {self.currentClockState}")
