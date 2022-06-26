@@ -84,7 +84,7 @@ def determineClockState(local_time, only_show_clock_state = True):
         if only_show_clock_state == True:
             return CLOCK_STATE_SHOW_CLOCK_TIME
         
-        
+        print("determineClockState, only_show_clock_state is:", only_show_clock_state)
         newState = None
 
         # trying stuff out for bugfixing
@@ -101,6 +101,9 @@ def determineClockState(local_time, only_show_clock_state = True):
             night_time_start = local_time.replace(hour=WEEKEND_NIGHT_START[0], minute=WEEKEND_NIGHT_START[1], second=0, microsecond=0)
             night_time_end = local_time.replace(hour=WEEKEND_NIGHT_END[0], minute=WEEKEND_NIGHT_END[1], second=0, microsecond=0)
         
+        print("morning time start/end = ", morning_time_start, morning_time_end)
+        print("night time start/end = ", night_time_start, night_time_end)
+
         if morning_time_start <= local_time < morning_time_end:
             newState = CLOCK_STATE_SHOW_GOOD_MORNING
         elif night_time_start <= local_time < night_time_end:
