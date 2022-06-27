@@ -28,6 +28,8 @@ if __name__ == "__main__":
         strip.setPixelColor(i, Color(255,255,255))
         strip.show()
 
+        time.sleep(.3)
+
 
     # try:
 
