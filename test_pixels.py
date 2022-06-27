@@ -10,6 +10,7 @@ LED_BRIGHTNESS = 50     # Set to 0 for darkest and 255 for brightest
 LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
+from random import randint
 
 # def colorWipe(strip, color, wait_ms=50):
 #     """Wipe color across display a pixel at a time."""
@@ -25,9 +26,13 @@ if __name__ == "__main__":
     strip.begin()
 
     for i in range(16**2):
-        strip.setPixelColor(i, Color(255,255,255))
+        
+        r,g,b = randint(1,255),randint(1,255),randint(1,255)
+        
+        strip.setPixelColor(i, Color(r,g,b))
         strip.show()
 
+        print("Show pixel i", i, "with RGB = ", r, g,b)
         time.sleep(.3)
 
 
