@@ -11,33 +11,36 @@ LED_INVERT     = False   # True to invert the signal (when using NPN transistor 
 LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 
-def colorWipe(strip, color, wait_ms=50):
-    """Wipe color across display a pixel at a time."""
-    for i in range(strip.numPixels()):
-        strip.setPixelColor(i, color)
-        strip.show()
-        time.sleep(wait_ms/1000.0)
+# def colorWipe(strip, color, wait_ms=50):
+#     """Wipe color across display a pixel at a time."""
+#     for i in range(strip.numPixels()):
+#         time.sleep(wait_ms/1000.0)
 
 
 if __name__ == "__main__":
     
-    color = (255,255,255)
+ 
     
     strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
     strip.begin()
 
-    try:
-
-        while True:
-            print("color wipe")
-            colorWipe(strip, Color(255,255,255))
-
-    except KeyboardInterrupt:
-        print("KEYBOARD INTERUPT")
-
-        for i in range(strip.numPixels()):
-            strip.setPixelColorRGB(i,0,0,0)
+    for i in range(16**2):
+        strip.setPixelColor(i, Color(255,255,255))
         strip.show()
+
+
+    # try:
+
+    #     while True:
+    #         print("color wipe")
+    #         colorWipe(strip, Color(255,255,255))
+
+    # except KeyboardInterrupt:
+    #     print("KEYBOARD INTERUPT")
+
+    #     for i in range(strip.numPixels()):
+    #         strip.setPixelColorRGB(i,0,0,0)
+    #     strip.show()
 
 
 
