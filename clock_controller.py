@@ -78,7 +78,7 @@ class ClockController:
                 hour = translate_to_12h_clock_format(local_time.hour)
                 min = local_time.minute
 
-                newClockState = determineClockState(local_time,only_show_clock_state=False)
+                newClockState = determineClockState(local_time,only_show_clock_state=True)
                 if newClockState != self.currentClockState:
                     self.currentClockState = newClockState
                     self.deactivate_active_pixels()
