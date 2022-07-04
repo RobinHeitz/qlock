@@ -12,6 +12,17 @@ from pixel_controller import PixelController
 
 from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
+from rpi_ws281x import *
+
+LED_COUNT      = 16**2      # Number of LED pixels.
+LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
+LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA        = 10      # DMA channel to use for generating signal (try 10)
+LED_BRIGHTNESS = 50     # Set to 0 for darkest and 255 for brightest
+LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
+LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+
+
 # format logger
 import logging
 
@@ -69,6 +80,10 @@ class ClockController:
     def __init__(self):
         self.birthDate = (6,14) # (month, day)
         # self.birthDate = (6,9) # (month, day)
+
+        self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+        self.strip.begin()
+
 
         self.controller = PixelController()
         self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
