@@ -103,11 +103,13 @@ class ClockController:
 
 
     def add_new_pixels(self, pixels, color=STD_COL):
+        print("add new pixels:")
         for p in pixels:
             self.new_pixels.add(
                 Pixel(p, color)
             )
     def add_new_pixel(self, pixel, color=STD_COL):
+        print("add new pixel")
         self.new_pixels.add(
             Pixel(pixel, color)
         )
@@ -133,10 +135,10 @@ class ClockController:
 
     def clock(self):
 
-        while True:
-            try:
+        try:
+            while True:
                 
-             
+                logging.info("Clock()")
                 local_time, y, m, d, hour, min = self._get_time_items()
 
                 # newClockState = determineClockState(local_time,only_show_clock_state=False)
@@ -146,6 +148,8 @@ class ClockController:
 
                 
                 if self.currentClockState == CLOCK_STATE_SHOW_CLOCK_TIME:
+
+                    logging.info("CLOCK STATE SHOW TIME")
                     
                     #min dots
                     min_pixels = MIN_POINTS_DEF.get(min % 5)
@@ -229,19 +233,21 @@ class ClockController:
                 
                 # self.workThroughQueue()
 
+                print(self.new_pixels)
                 pixels_to_switch_on = self.new_pixels - self.old_pixels
                 pixels_to_switch_off = self.old_pixels - self.new_pixels
 
 
-                for p in pixels_to_switch_on:
-                    self.strip.setPixelColorRGB(p.pixel,255,255,255)
-                logging.debug(f"Number of pixels to shut on: {len(pixels_to_switch_on)}")
+
+                # for p in pixels_to_switch_on:
+                #     self.strip.setPixelColorRGB(p.pixel,255,255,255)
+                # logging.debug(f"Number of pixels to shut on: {len(pixels_to_switch_on)}")
 
 
 
-                for p in pixels_to_switch_off:
-                    self.strip.setPixelColorRGB(p.pixel,0,0,0)
-                logging.debug(f"Number of pixels to shut off: {len(pixels_to_switch_off)}")
+                # for p in pixels_to_switch_off:
+                #     self.strip.setPixelColorRGB(p.pixel,0,0,0)
+                # logging.debug(f"Number of pixels to shut off: {len(pixels_to_switch_off)}")
 
                 self.old_pixels = self.new_pixels
                 self.new_pixels = set()
@@ -250,12 +256,13 @@ class ClockController:
 
                 time.sleep(1)
 
-            except KeyboardInterrupt:
-                self.deactivate_active_pixels()
-            
-            except Exception as e:
-                print("Exception occured", e)
-                self.deactivate_active_pixels()
+        except KeyboardInterrupt:
+            logging.info("KeyboardInterrupt")
+            # self.deactivate_active_pixels()
+        
+        except Exception as e:
+            logging.error(e)
+            # self.deactivate_active_pixels()
                 
     
     def deactivate_active_pixels(self):
