@@ -60,7 +60,6 @@ class ClockController:
 
         self.clock()
 
-    
     def clock(self):
 
         while True:
@@ -78,7 +77,7 @@ class ClockController:
                 hour = translate_to_12h_clock_format(local_time.hour)
                 min = local_time.minute
 
-                newClockState = determineClockState(local_time,only_show_clock_state=True)
+                newClockState = determineClockState(local_time,only_show_clock_state=False)
                 if newClockState != self.currentClockState:
                     self.currentClockState = newClockState
                     self.deactivate_active_pixels()
@@ -164,7 +163,7 @@ class ClockController:
                 self.deactivate_active_pixels()
             
             except Exception as e:
-                print(f"Exception occured, print(e) = {e}")
+                print("Exception occured", e)
                 self.deactivate_active_pixels()
                 
     
@@ -182,6 +181,7 @@ class ClockController:
     def workThroughQueue(self):
 
         while len(self.changeQueue) > 0:
+    
             p = self.changeQueue.pop()
             
             #deactive old pixels
