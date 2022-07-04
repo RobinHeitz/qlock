@@ -44,7 +44,10 @@ print(t)
 
 # %%
 
-teest = {1,2,3,4,5,6,7,8,69}
+test = set()
+print(type(test))
 
-while len(teest) > 0:
-    print(teest.pop())
+test.add("2")
+test.add(2)
+
+print(test)

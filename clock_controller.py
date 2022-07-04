@@ -78,8 +78,8 @@ class ClockController:
         self.changeQueue = []
 
         # new way of handling pixels
-        self.old_pixels = {}
-        self.new_pixels = {}
+        self.old_pixels = set()
+        self.new_pixels = set()
 
 
         logging.debug("ClockController init() done. Start clocking now.")
