@@ -8,34 +8,10 @@ from pixel_definition import (
     WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_before, WD_quarter,
     WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_ALL_PIXELS
     )
-# from pixel_controller import PixelController
 
 from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
-from rpi_ws281x import Adafruit_NeoPixel
-
-LED_COUNT      = 16**2      # Number of LED pixels.
-LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
-LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
-LED_DMA        = 10      # DMA channel to use for generating signal (try 10)
-LED_BRIGHTNESS = 50     # Set to 0 for darkest and 255 for brightest
-LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
-LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
-
-
-# format logger
-# import logging
-
-# logging.basicConfig(filename='clock_controller.log', filemode='w', format='%(asctime)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
-# logging.warning('This will get logged to a file')
-
 import logging
-
-# log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-# logger = logging.getLogger(__name__)
-
-
-
 
 logFormatter = logging.Formatter("'%(asctime)s - %(message)s'")
 logger = logging.getLogger()
@@ -49,6 +25,20 @@ logger.addHandler(fileHandler)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(logFormatter)
 logger.addHandler(consoleHandler)
+
+
+
+LED_COUNT      = 16**2      # Number of LED pixels.
+LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
+LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA        = 10      # DMA channel to use for generating signal (try 10)
+LED_BRIGHTNESS = 50     # Set to 0 for darkest and 255 for brightest
+LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
+LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+
+
+
+
 
 CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
@@ -68,6 +58,14 @@ DEF_GOOD_MORNING = "DEF_GOOD_MORNING"
 
 DEF_ClOCK_RELATED_KEYS = [DEF_MIN_DOTS, DEF_IT_IS, DEF_TIME_WORDS, DEF_HOUR_WORD_REP, DEF_BIRTHDAY]
 
+
+import io
+def is_raspberrypi():
+    try:
+        with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
+            if 'raspberry pi' in m.read().lower(): return True
+    except Exception: pass
+    return False
 
 class Pixel:
  
@@ -96,8 +94,10 @@ class ClockController:
     def __init__(self):
         self.birthDate = (6,14) # (month, day)
 
-        self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
-        self.strip.begin()
+        if is_raspberrypi():
+            from rpi_ws281x import Adafruit_NeoPixel
+            self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+            self.strip.begin()
 
 
         self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
@@ -159,6 +159,8 @@ class ClockController:
 
 
     def _change_pixel_lights(self):
+        if not is_raspberrypi():
+            return
 
         pixels_to_switch_on, pixels_to_switch_off = self.get_pixel_difference()
 
@@ -169,6 +171,14 @@ class ClockController:
         for p in pixels_to_switch_off:
             self.strip.setPixelColorRGB(p.pixel,0,0,0)
 
+        self.strip.show()
+
+    def deactivate_all_pixels(self):
+        if not is_raspberrypi():
+            return
+        all_pixels = self.new_pixels + self.old_pixels
+        for p in all_pixels:
+            self.strip.setPixelColorRGB(p.pixel,0,0,0)
         self.strip.show()
 
 
@@ -310,7 +320,7 @@ class ClockController:
 
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt")
-            # self.deactivate_active_pixels()
+            self.deactivate_all_pixels()
         
         except Exception as e:
             logger.error(f"Exception was thrown: {e}")
