@@ -140,16 +140,27 @@ class ClockController:
         return local_time, y, m, d, hour, min_
 
 
-    def _change_pixel_lights(self):
 
+    def get_pixel_difference(self):
         pixels_to_switch_on = self.new_pixels - self.old_pixels
         pixels_to_switch_off = self.old_pixels - self.new_pixels
+        
+        # switch values for next round
+        self.old_pixels = self.new_pixels
+        self.new_pixels = set()
 
         logger.warning(f"pixels to switch ON:")
         logger.warning(pixels_to_switch_on)
 
         logger.info(f"pixels to switch off:")
         logger.info(pixels_to_switch_off)
+
+        return pixels_to_switch_on, pixels_to_switch_off
+
+
+    def _change_pixel_lights(self):
+
+        pixels_to_switch_on, pixels_to_switch_off = self.get_pixel_difference()
 
         for p in pixels_to_switch_on:
             self.strip.setPixelColorRGB(p.pixel,255,255,255)
@@ -158,8 +169,8 @@ class ClockController:
         for p in pixels_to_switch_off:
             self.strip.setPixelColorRGB(p.pixel,0,0,0)
 
-        self.old_pixels = self.new_pixels
-        self.new_pixels = set()
+        self.strip.show()
+
 
 
 
