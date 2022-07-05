@@ -3,7 +3,7 @@ from tkinter import E
 import pytz
 import time
 
-from pixel_definition import (MIN_POINTS_DEF, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_IT_IS, WD_CHARLY)
+from pixel_definition import (MIN_POINTS_DEF, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_HAPPY_BD, WD_IT_IS, WD_CHARLY)
 from helper_funcs import translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
 
@@ -39,6 +39,8 @@ CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
 STD_COL = (255,255,255)
 
+# BIRTH_DATE = (6,14) # (month, day)
+BIRTH_DATE = (7,5) # (month, day)
 
 
 import io
@@ -70,14 +72,13 @@ class Pixel:
         return False
 
     def __hash__(self) -> int:
-        return hash((self.pixel, *self.color))
+        return hash(self.pixel)
 
 
 
 class ClockController:
 
     def __init__(self):
-        self.birthDate = (6,14) # (month, day)
 
         if is_raspberrypi():
             from rpi_ws281x import Adafruit_NeoPixel
@@ -193,8 +194,12 @@ class ClockController:
         self.add_new_pixels(good_night_pixels, color=(50,150,250))
 
     
-    def _check_birthday(self):
-        pass
+    def _check_birthday(self, m, d):
+        
+        if m == BIRTH_DATE[0] and d == BIRTH_DATE[1]:
+            #its her birthday
+            self.add_new_pixels(WD_HAPPY_BD + WD_CHARLY, color=(28,217,230))
+
 
 
 
@@ -216,7 +221,7 @@ class ClockController:
                     self._clock_state_show_good_night()
 
                 
-                self._check_birthday()
+                self._check_birthday(m, d)
 
                 self._execute_pixel_changes()
                 time.sleep(1)
@@ -227,7 +232,7 @@ class ClockController:
         
         except Exception as e:
             logger.error(f"Exception was thrown: {e}")
-            # self.deactivate_active_pixels()
+            self.deactivate_all_pixels()
                 
     
         
