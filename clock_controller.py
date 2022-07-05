@@ -39,8 +39,8 @@ CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
 STD_COL = (255,255,255)
 
-# BIRTH_DATE = (6,14) # (month, day)
-BIRTH_DATE = (7,5) # (month, day)
+BIRTH_DATE = (6,14) # (month, day)
+# BIRTH_DATE = (7,5) # (month, day)
 
 
 import io
@@ -211,6 +211,7 @@ class ClockController:
 
                 current_clock_state = determineClockState(local_time)
 
+                self._check_birthday(m, d)
                 
                 if current_clock_state == CLOCK_STATE_NORMAL:
                     self._clock_state_normal(min,hour)
@@ -221,7 +222,6 @@ class ClockController:
                     self._clock_state_show_good_night()
 
                 
-                self._check_birthday(m, d)
 
                 self._execute_pixel_changes()
                 time.sleep(1)
