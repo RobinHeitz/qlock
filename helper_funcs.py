@@ -6,9 +6,7 @@ from pixel_definition import (
     WD_quarter, WD_three_quarter, WD_3_2, WD_ALL_PIXELS, WD_BIRTHDAY, WD_GOOD, WD_MIN_2, WD_MIN_3, WD_NIGHT,HOUR_DEF
 )
 
-# from clock_control_v2 import CLOCK_STATE_SHOW_CLOCK_TIME, CLOCK_STATE_SHOW_GOOD_MORNING, CLOCK_STATE_SHOW_GOOD_NIGHT
-
-CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
+CLOCK_STATE_NORMAL = "CLOCK_STATE_NORMAL"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
 CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
@@ -80,11 +78,7 @@ def hour_wording_rep(min,hour):
 
 
 
-def determineClockState(local_time, only_show_clock_state = True):
-        if only_show_clock_state == True:
-            return CLOCK_STATE_SHOW_CLOCK_TIME
-        
-        print("determineClockState, only_show_clock_state is:", only_show_clock_state)
+def determineClockState(local_time):
         newState = None
 
 
@@ -115,7 +109,8 @@ def determineClockState(local_time, only_show_clock_state = True):
         elif night_time_start <= local_time < night_time_end:
             newState = CLOCK_STATE_SHOW_GOOD_NIGHT
         else:
-            newState = CLOCK_STATE_SHOW_CLOCK_TIME
+            newState = CLOCK_STATE_NORMAL
+
         
         return newState
         

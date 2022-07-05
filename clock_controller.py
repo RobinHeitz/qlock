@@ -40,7 +40,7 @@ LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 
 
-CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
+CLOCK_STATE_NORMAL = "CLOCK_STATE_NORMAL"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
 CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
@@ -53,8 +53,8 @@ DEF_HOUR_WORD_REP = "DEF_HOUR_WORD_REP"
 
 DEF_BIRTHDAY = "DEF_BIRTHDAY"
 
-DEF_GOOD_NIGHT = "DEF_GOOD_NIGHT"
-DEF_GOOD_MORNING = "DEF_GOOD_MORNING"
+# DEF_GOOD_NIGHT = "DEF_GOOD_NIGHT"
+# DEF_GOOD_MORNING = "DEF_GOOD_MORNING"
 
 DEF_ClOCK_RELATED_KEYS = [DEF_MIN_DOTS, DEF_IT_IS, DEF_TIME_WORDS, DEF_HOUR_WORD_REP, DEF_BIRTHDAY]
 
@@ -98,9 +98,6 @@ class ClockController:
             from rpi_ws281x import Adafruit_NeoPixel
             self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
             self.strip.begin()
-
-
-        self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
 
         self.old_pixels = set()
         self.new_pixels = set()
@@ -158,7 +155,7 @@ class ClockController:
         return pixels_to_switch_on, pixels_to_switch_off
 
 
-    def _change_pixel_lights(self):
+    def _execute_pixel_changes(self):
         if not is_raspberrypi():
             return
 
@@ -181,141 +178,62 @@ class ClockController:
             self.strip.setPixelColorRGB(p.pixel,0,0,0)
         self.strip.show()
 
+    
+    def _clock_state_normal(self, minutes, hour):
+        # minute pixels at the edge of the board
+        minute_edge_pixels = MIN_POINTS_DEF.get(minutes % 5)
+        logger.info(f"min_pixels = {minute_edge_pixels}")
+        self.add_new_pixels(minute_edge_pixels)
+        
+        # show the word "it is"
+        logger.info(f"add word-def 'it is': {WD_IT_IS}")
+        self.add_new_pixels(WD_IT_IS)
 
+        #words corresponding to muntes, like 15 min before, half etc.
+        minutes_words = clock_words(minutes)
+        logger.info(f"minute words: {minutes_words}")
+        self.add_new_pixels(minutes_words)
+
+        #hour as word like 1, 2, 3 etc.
+        current_hour_word = hour_wording_rep(minutes, hour)
+        self.add_new_pixels(current_hour_word)
+
+    def _clock_state_show_good_morning(self):
+        good_morning_pixels  = WD_GOOD_MORNING +  WD_CHARLY
+        self.add_new_pixels(good_morning_pixels, color=(140,240,10))
+
+    
+    def _clock_state_show_good_night(self):
+        good_night_pixels = WD_GOOD_NIGHT + WD_CHARLY
+        self.add_new_pixels(good_night_pixels, color=(50,150,250))
+
+    
+    def _check_birthday(self):
+        pass
 
 
 
     def clock(self):
-
         try:
             while True:
                 logger.info("Clock()")
                 local_time, y, m, d, hour, min = self._get_time_items()
 
-                # newClockState = determineClockState(local_time,only_show_clock_state=False)
-                # if newClockState != self.currentClockState:
-                #     self.currentClockState = newClockState
-                #     self.deactivate_active_pixels()
+                current_clock_state = determineClockState(local_time)
 
                 
-                if self.currentClockState == CLOCK_STATE_SHOW_CLOCK_TIME:
+                if current_clock_state == CLOCK_STATE_NORMAL:
+                    self._clock_state_normal(min,hour)
 
-                    
-                    
-                    #min dots
-                    min_pixels = MIN_POINTS_DEF.get(min % 5)
-                    logger.info(f"min_pixels = {min_pixels}")
-                    self.add_new_pixels(min_pixels)
-                    
-                    # old_min_pixels = self.pixelStatus.get(DEF_MIN_DOTS)
-                    
-                    # if min_pixels != old_min_pixels:
-                    #     self.changeQueue.append(ChangePixels(min_pixels, DEF_MIN_DOTS, old_min_pixels))
+                elif current_clock_state == CLOCK_STATE_SHOW_GOOD_MORNING:
+                   self._clock_state_show_good_morning()
+                else:
+                    self._clock_state_show_good_night()
 
-                    
-                    ###########
-                    #it is
-                    # if self.pixelStatus.get(DEF_IT_IS) is None:
-                    #     self.changeQueue.append(ChangePixels(WD_IT_IS,DEF_IT_IS))
-
-                    logger.info(f"add word-def 'it is': {WD_IT_IS}")
-                    self.add_new_pixels(WD_IT_IS)
-
-                    ##########    
-
-                    #timing words, like 15 min before, half etc.
-                    currentWord = clock_words(min)
-                    logger.info(f"minute words: {currentWord}")
-                    # oldWord =self.pixelStatus.get(DEF_TIME_WORDS)
-                    # if oldWord != currentWord:
-                    #     #need change clock word
-                    #     self.changeQueue.append(
-                    #         ChangePixels(currentWord, DEF_TIME_WORDS,oldWord)
-                    #     )
-                    self.add_new_pixels(currentWord)
-
-
-                    #hour like 1, 2, 3 etc.
-                    # DEF_HOUR_WORD_REP
-                    currentHourWord = hour_wording_rep(min, hour)
-                    # oldHourWord = self.pixelStatus.get(DEF_HOUR_WORD_REP)
-                    # if currentHourWord != oldHourWord:
-                    #     self.changeQueue.append(
-                    #         ChangePixels(currentHourWord, DEF_HOUR_WORD_REP, oldHourWord)
-                    #     )
-
-                    self.add_new_pixels(currentHourWord)
-                    
-                    #check for birthday
-                    # old_bd = self.pixelStatus.get(DEF_BIRTHDAY)
-                    # cur_bd = []
-                    # if m == self.birthDate[0] and d == self.birthDate[1]:
-                    #     #its her birthday
-                    #     cur_bd  = WD_HAPPY_BD + WD_CHARLY
-
-                    # if old_bd != cur_bd:
-                    #     self.changeQueue.append(ChangePixels(cur_bd, DEF_BIRTHDAY, old_bd, (28,217,230)))
-
-
-
-
-                    
-
-                # elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_MORNING:
-                    
-                #     old_gm_pixels = self.pixelStatus.get(DEF_GOOD_MORNING)
-                #     cur_gm_pixels = WD_GOOD_MORNING +  WD_CHARLY
-                    
-                #     if old_gm_pixels != cur_gm_pixels:
-
-                #         self.changeQueue.append(
-                #             ChangePixels(cur_gm_pixels, DEF_GOOD_MORNING)
-                #         )
                 
-                
-                
-                
-                # elif self.currentClockState == CLOCK_STATE_SHOW_GOOD_NIGHT:
-                    
-                #     old_gn_pixels = self.pixelStatus.get(DEF_GOOD_NIGHT)
-                #     cur_gn_pixels = WD_GOOD_NIGHT + WD_CHARLY
+                self._check_birthday()
 
-                #     if old_gn_pixels != cur_gn_pixels:
-                #         self.changeQueue.append(
-                #             ChangePixels(cur_gn_pixels, DEF_GOOD_NIGHT)
-                #         )
-                
-                # self.workThroughQueue()
-
-                # logger.debug("Adding pixels finished")
-                # logger.debug(f"len(new_pixels) = {len(self.new_pixels)}")
-                # logger.debug(f"len(old_pixels) = {len(self.old_pixels)}")
-
-                # pixels_to_switch_on = self.new_pixels - self.old_pixels
-                # pixels_to_switch_off = self.old_pixels - self.new_pixels
-
-                # logger.warning(f"pixels to switch ON:")
-                # logger.warning(pixels_to_switch_on)
-
-                # logger.info(f"pixels to switch off:")
-                # logger.info(pixels_to_switch_off)
-
-
-
-
-                # for p in pixels_to_switch_on:
-                #     self.strip.setPixelColorRGB(p.pixel,255,255,255)
-
-
-                # for p in pixels_to_switch_off:
-                #     self.strip.setPixelColorRGB(p.pixel,0,0,0)
-
-                # self.old_pixels = self.new_pixels
-                # self.new_pixels = set()
-
-                self._change_pixel_lights()
-
-
+                self._execute_pixel_changes()
                 time.sleep(1)
 
         except KeyboardInterrupt:
