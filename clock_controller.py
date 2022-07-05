@@ -176,7 +176,7 @@ class ClockController:
     def deactivate_all_pixels(self):
         if not is_raspberrypi():
             return
-        all_pixels = self.new_pixels + self.old_pixels
+        all_pixels = self.new_pixels | self.old_pixels
         for p in all_pixels:
             self.strip.setPixelColorRGB(p.pixel,0,0,0)
         self.strip.show()
