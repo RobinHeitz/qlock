@@ -13,7 +13,10 @@ class Test():
         if isinstance(other, Test) and other.a == self.a:
             return True
         return False
-
+    
+    def __hash__(self) -> int:
+        # return hash((self.a, self.b))
+        return hash(self.a)
     
 
 
