@@ -12,7 +12,7 @@ from pixel_definition import (
 
 from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
-# from rpi_ws281x import Adafruit_NeoPixel
+from rpi_ws281x import Adafruit_NeoPixel
 
 LED_COUNT      = 16**2      # Number of LED pixels.
 LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
