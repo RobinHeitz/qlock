@@ -1,5 +1,5 @@
 from datetime import datetime
-import traceback
+from tkinter import E
 import pytz
 import time
 from pixel_definition import (
@@ -8,11 +8,11 @@ from pixel_definition import (
     WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_before, WD_quarter,
     WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_ALL_PIXELS
     )
-from pixel_controller import PixelController
+# from pixel_controller import PixelController
 
 from helper_funcs import next_hour, translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
-from rpi_ws281x import *
+# from rpi_ws281x import Adafruit_NeoPixel
 
 LED_COUNT      = 16**2      # Number of LED pixels.
 LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
@@ -24,10 +24,31 @@ LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 
 # format logger
+# import logging
+
+# logging.basicConfig(filename='clock_controller.log', filemode='w', format='%(asctime)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
+# logging.warning('This will get logged to a file')
+
 import logging
 
-logging.basicConfig(filename='clock_controller.log', filemode='w', format='%(asctime)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
-logging.warning('This will get logged to a file')
+# log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# logger = logging.getLogger(__name__)
+
+
+
+
+logFormatter = logging.Formatter("'%(asctime)s - %(message)s'")
+logger = logging.getLogger()
+
+logger.setLevel(logging.DEBUG)
+
+fileHandler = logging.FileHandler("clock_controller.log", mode="w")
+fileHandler.setFormatter(logFormatter)
+logger.addHandler(fileHandler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+logger.addHandler(consoleHandler)
 
 CLOCK_STATE_SHOW_CLOCK_TIME = "CLOCK_STATE_SHOW_CLOCK_TIME"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
@@ -47,31 +68,26 @@ DEF_GOOD_MORNING = "DEF_GOOD_MORNING"
 
 DEF_ClOCK_RELATED_KEYS = [DEF_MIN_DOTS, DEF_IT_IS, DEF_TIME_WORDS, DEF_HOUR_WORD_REP, DEF_BIRTHDAY]
 
-logger = logging
-
-class ChangePixels:
-
-    def __init__(self, pixels,key,oldPixels=None, color=STD_COL):
-        self.pixels = pixels
-        self.key = key 
-        self.oldPixels = oldPixels
-        self.color = color
-
-    def __str__(self):
-        return 'pixels: {}'.format(self.pixels)
-
 
 class Pixel:
+ 
     def __init__(self, pixel, color=STD_COL) -> None:
         self.pixel = pixel
         self.color = color
 
     def __str__(self) -> str:
-        return f"Pixel No. {self.p}"
+        return f"P: {self.pixel}"
 
     def __repr__(self) -> str:
-        return f"Pixel No. {self.p}"
+        return f"P: {self.pixel}"
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Pixel) and other.pixel == self.pixel and other.color == self.color:
+            return True
+        return False
+
+    def __hash__(self) -> int:
+        return hash((self.pixel, *self.color))
 
 
 class ClockController:
@@ -79,37 +95,29 @@ class ClockController:
 
     def __init__(self):
         self.birthDate = (6,14) # (month, day)
-        # self.birthDate = (6,9) # (month, day)
 
         self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
         self.strip.begin()
 
 
-        self.controller = PixelController()
         self.currentClockState = CLOCK_STATE_SHOW_CLOCK_TIME
 
-        # deprecated
-        self.pixelStatus = {}
-        self.changeQueue = []
-
-        # new way of handling pixels
         self.old_pixels = set()
         self.new_pixels = set()
 
-
-        logging.debug("ClockController init() done. Start clocking now.")
+        logger.debug("ClockController init() done. Start clocking now.")
         self.clock()
 
 
 
     def add_new_pixels(self, pixels, color=STD_COL):
-        print("add new pixels:")
+        logger.debug(f"add_new_pixels(); No. pixels = {len(pixels)}")
         for p in pixels:
             self.new_pixels.add(
                 Pixel(p, color)
             )
     def add_new_pixel(self, pixel, color=STD_COL):
-        print("add new pixel")
+        logger.debug("add_new_pixel()")
         self.new_pixels.add(
             Pixel(pixel, color)
         )
@@ -132,13 +140,35 @@ class ClockController:
         return local_time, y, m, d, hour, min_
 
 
+    def _change_pixel_lights(self):
+
+        pixels_to_switch_on = self.new_pixels - self.old_pixels
+        pixels_to_switch_off = self.old_pixels - self.new_pixels
+
+        logger.warning(f"pixels to switch ON:")
+        logger.warning(pixels_to_switch_on)
+
+        logger.info(f"pixels to switch off:")
+        logger.info(pixels_to_switch_off)
+
+        for p in pixels_to_switch_on:
+            self.strip.setPixelColorRGB(p.pixel,255,255,255)
+
+
+        for p in pixels_to_switch_off:
+            self.strip.setPixelColorRGB(p.pixel,0,0,0)
+
+        self.old_pixels = self.new_pixels
+        self.new_pixels = set()
+
+
+
 
     def clock(self):
 
         try:
             while True:
-                
-                logging.info("Clock()")
+                logger.info("Clock()")
                 local_time, y, m, d, hour, min = self._get_time_items()
 
                 # newClockState = determineClockState(local_time,only_show_clock_state=False)
@@ -149,10 +179,11 @@ class ClockController:
                 
                 if self.currentClockState == CLOCK_STATE_SHOW_CLOCK_TIME:
 
-                    logging.info("CLOCK STATE SHOW TIME")
+                    
                     
                     #min dots
                     min_pixels = MIN_POINTS_DEF.get(min % 5)
+                    logger.info(f"min_pixels = {min_pixels}")
                     self.add_new_pixels(min_pixels)
                     
                     # old_min_pixels = self.pixelStatus.get(DEF_MIN_DOTS)
@@ -166,12 +197,14 @@ class ClockController:
                     # if self.pixelStatus.get(DEF_IT_IS) is None:
                     #     self.changeQueue.append(ChangePixels(WD_IT_IS,DEF_IT_IS))
 
+                    logger.info(f"add word-def 'it is': {WD_IT_IS}")
                     self.add_new_pixels(WD_IT_IS)
 
                     ##########    
 
                     #timing words, like 15 min before, half etc.
                     currentWord = clock_words(min)
+                    logger.info(f"minute words: {currentWord}")
                     # oldWord =self.pixelStatus.get(DEF_TIME_WORDS)
                     # if oldWord != currentWord:
                     #     #need change clock word
@@ -233,62 +266,46 @@ class ClockController:
                 
                 # self.workThroughQueue()
 
-                print(self.new_pixels)
-                pixels_to_switch_on = self.new_pixels - self.old_pixels
-                pixels_to_switch_off = self.old_pixels - self.new_pixels
+                # logger.debug("Adding pixels finished")
+                # logger.debug(f"len(new_pixels) = {len(self.new_pixels)}")
+                # logger.debug(f"len(old_pixels) = {len(self.old_pixels)}")
+
+                # pixels_to_switch_on = self.new_pixels - self.old_pixels
+                # pixels_to_switch_off = self.old_pixels - self.new_pixels
+
+                # logger.warning(f"pixels to switch ON:")
+                # logger.warning(pixels_to_switch_on)
+
+                # logger.info(f"pixels to switch off:")
+                # logger.info(pixels_to_switch_off)
+
 
 
 
                 # for p in pixels_to_switch_on:
                 #     self.strip.setPixelColorRGB(p.pixel,255,255,255)
-                # logging.debug(f"Number of pixels to shut on: {len(pixels_to_switch_on)}")
-
 
 
                 # for p in pixels_to_switch_off:
                 #     self.strip.setPixelColorRGB(p.pixel,0,0,0)
-                # logging.debug(f"Number of pixels to shut off: {len(pixels_to_switch_off)}")
 
-                self.old_pixels = self.new_pixels
-                self.new_pixels = set()
+                # self.old_pixels = self.new_pixels
+                # self.new_pixels = set()
 
+                self._change_pixel_lights()
 
 
                 time.sleep(1)
 
         except KeyboardInterrupt:
-            logging.info("KeyboardInterrupt")
+            logger.info("KeyboardInterrupt")
             # self.deactivate_active_pixels()
         
         except Exception as e:
-            logging.error(e)
+            logger.error(f"Exception was thrown: {e}")
             # self.deactivate_active_pixels()
                 
     
-    def deactivate_active_pixels(self):
-        """Called once after time change, clears Pixels"""
-        # self.controller.deactivatePixels(WD_ALL_PIXELS)
-
-        pixels = []
-        for key in self.pixelStatus.keys():
-            pixels = pixels + self.pixelStatus.get(key,[])
-            self.pixelStatus.pop(key)
-        self.controller.deactivatePixels(pixels)
-
-
-    def workThroughQueue(self):
-
-        while len(self.changeQueue) > 0:
-    
-            p = self.changeQueue.pop()
-            
-            #deactive old pixels
-            if p.oldPixels:
-                self.controller.deactivatePixels(p.oldPixels)
-
-            self.controller.activatePixelsRGB(p.pixels, *p.color)
-            self.pixelStatus[p.key] = p.pixels
-
         
 if __name__ == "__main__":
     controller = ClockController()
