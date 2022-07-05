@@ -2,21 +2,15 @@ from datetime import datetime
 from tkinter import E
 import pytz
 import time
-# from pixel_definition import (
-#     HOUR_DEF, MIN_POINTS_DEF, WD_10_1, WD_2, WD_20_1, WD_5_1, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_MIN_4, WD_IT_IS,WD_1_O_CLOCK,WD_CLOCK,
-#     WD_5_MIN_AFTER,WD_10_MIN_AFTER,WD_15_MIN_AFTER,WD_20_MIN_AFTER,WD_5_MIN_BEFORE_HALF,WD_HALF,
-#     WD_5_MIN_AFTER_HALF, WD_20_BEFORE,WD_15_BEFORE,WD_10_BEFORE,WD_5_BEFORE, WD_before, WD_quarter,
-#     WD_HAPPY, WD_HAPPY_BD,WD_BIRTHDAY,WD_CHARLY,WD_ALL_PIXELS
-#     )
-from pixel_definition import (MIN_POINTS_DEF, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_IT_IS, WD_CHARLY)
 
+from pixel_definition import (MIN_POINTS_DEF, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_IT_IS, WD_CHARLY)
 from helper_funcs import translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
-import logging
 
+# LOGGING CONFIGURATION
+import logging
 logFormatter = logging.Formatter("'%(asctime)s - %(message)s'")
 logger = logging.getLogger()
-
 logger.setLevel(logging.DEBUG)
 
 fileHandler = logging.FileHandler("clock_controller.log", mode="w")
@@ -29,6 +23,7 @@ logger.addHandler(consoleHandler)
 
 
 
+# LED STRIP CONFIGURATION
 LED_COUNT      = 16**2      # Number of LED pixels.
 LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
 LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
@@ -38,26 +33,12 @@ LED_INVERT     = False   # True to invert the signal (when using NPN transistor 
 LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 
-
-
-
 CLOCK_STATE_NORMAL = "CLOCK_STATE_NORMAL"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
 CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
 STD_COL = (255,255,255)
 
-# DEF_MIN_DOTS = "DEF_MIN_DOTS"
-# DEF_IT_IS = "DEF_IT_IS" 
-# DEF_TIME_WORDS = "DEF_TIME_WORDS" #after, half, 15 min before etc.
-# DEF_HOUR_WORD_REP = "DEF_HOUR_WORD_REP"
-
-# DEF_BIRTHDAY = "DEF_BIRTHDAY"
-
-# # DEF_GOOD_NIGHT = "DEF_GOOD_NIGHT"
-# # DEF_GOOD_MORNING = "DEF_GOOD_MORNING"
-
-# DEF_ClOCK_RELATED_KEYS = [DEF_MIN_DOTS, DEF_IT_IS, DEF_TIME_WORDS, DEF_HOUR_WORD_REP, DEF_BIRTHDAY]
 
 
 import io
@@ -67,6 +48,9 @@ def is_raspberrypi():
             if 'raspberry pi' in m.read().lower(): return True
     except Exception: pass
     return False
+
+
+
 
 class Pixel:
  
@@ -89,8 +73,8 @@ class Pixel:
         return hash((self.pixel, *self.color))
 
 
-class ClockController:
 
+class ClockController:
 
     def __init__(self):
         self.birthDate = (6,14) # (month, day)
@@ -163,7 +147,7 @@ class ClockController:
         pixels_to_switch_on, pixels_to_switch_off = self.get_pixel_difference()
 
         for p in pixels_to_switch_on:
-            self.strip.setPixelColorRGB(p.pixel,255,255,255)
+            self.strip.setPixelColorRGB(p.pixel,*p.color)
 
 
         for p in pixels_to_switch_off:
