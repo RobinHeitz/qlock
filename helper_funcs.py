@@ -17,16 +17,6 @@ END_HOUR = "end_hour"
 END_MIN = "end_hour"
 
 
-# WEEKDAY_MORNING_START = (6,15) #hour, min
-# WEEKDAY_MORNING_END = (6,45)
-# WEEKDAY_NIGHT_START = (21,15)
-# WEEKDAY_NIGHT_END = (22,0)
-
-# WEEKEND_MORNING_START = (9,0)
-# WEEKEND_MORNING_END = (10,0)
-# WEEKEND_NIGHT_START = (22,30)
-# WEEKEND_NIGHT_END = (23,0)
-
 def next_hour(current_h):
         if current_h == 23:
             return 0
@@ -90,24 +80,26 @@ def determineClockState(local_time, early_m, early_n, late_m, late_n):
 
         # morning routine:
         if local_time.isoweekday() <= 5:
+            print("ITS EARLY MORNING!")
             morning_time_start = local_time.replace(hour=early_m.get(START_HOUR), minute=early_m.get(START_MIN), second=0, microsecond=0)
             morning_time_end = local_time.replace(hour=early_m.get(END_HOUR), minute=early_m.get(END_MIN), second=0, microsecond=0)
         else:
+            print("ITS LATE MORNING!")
             morning_time_start = local_time.replace(hour=late_m.get(START_HOUR), minute=late_m.get(START_MIN), second=0, microsecond=0)
             morning_time_end = local_time.replace(hour=late_m.get(END_HOUR), minute=late_m.get(END_MIN), second=0, microsecond=0)
         
         # night routine
         if 5 <= local_time.isoweekday() <= 6:
+            print("ITS LATE NIGHT!!!")
             night_time_start = local_time.replace(hour=late_n.get(START_HOUR), minute=late_n.get(START_MIN), second=0, microsecond=0)
             night_time_end = local_time.replace(hour=late_n.get(END_HOUR), minute=late_n.get(END_MIN), second=0, microsecond=0)
 
         else:
+            print("ITS EARLY NIGHT!!!")
             night_time_start = local_time.replace(hour=early_n.get(START_HOUR), minute=early_n.get(START_MIN), second=0, microsecond=0)
             night_time_end = local_time.replace(hour=early_n.get(END_HOUR), minute=early_n.get(END_MIN), second=0, microsecond=0)
 
-        
-        # print("morning time start/end = ", morning_time_start, morning_time_end)
-        # print("night time start/end = ", night_time_start, night_time_end)
+
 
         if morning_time_start <= local_time < morning_time_end:
             newState = CLOCK_STATE_SHOW_GOOD_MORNING
