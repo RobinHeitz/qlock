@@ -1,12 +1,12 @@
 birthday:
-  month: 6
-  day: 14
+  month: 7
+  day: 15
 
 early_morning:
-  start_hour: 4
-  start_min: 60
-  end_hour: 5
-  end_min: 10
+  start_hour: 6
+  start_min: 15
+  end_hour: 6
+  end_min: 45
 
 early_night:
   start_hour: 4

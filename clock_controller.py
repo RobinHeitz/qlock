@@ -6,6 +6,8 @@ import time
 from pixel_definition import (MIN_POINTS_DEF, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_HAPPY_BD, WD_IT_IS, WD_CHARLY)
 from helper_funcs import translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
+from load_config import load_config_from_file
+
 
 # LOGGING CONFIGURATION
 import logging
@@ -87,6 +89,8 @@ class ClockController:
 
         self.old_pixels = set()
         self.new_pixels = set()
+
+        self.cfg_birthday, self.cfg_early_morning, self.cfg_early_night, self.cfg_late_morning, self.cfg_late_night = load_config_from_file()
 
         logger.debug("ClockController init() done. Start clocking now.")
         self.clock()
@@ -195,8 +199,10 @@ class ClockController:
 
     
     def _check_birthday(self, m, d):
+        month = self.cfg_birthday.get('month')
+        day = self.cfg_birthday.get('day')
         
-        if m == BIRTH_DATE[0] and d == BIRTH_DATE[1]:
+        if m == month and d == day:
             #its her birthday
             self.add_new_pixels(WD_HAPPY_BD + WD_CHARLY, color=(28,217,230))
 

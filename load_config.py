@@ -1,14 +1,14 @@
 import yaml
 
-def get_config():
+def load_config_from_file():
 
     """Returns config loaded from yaml. If no file was found, it provides standard values.
     
     Returns:
     - birthday config
     - early morning config
-    - late morning config
     - early night config
+    - late morning config
     - late night config"""
 
     
