@@ -1,0 +1,28 @@
+birthday:
+  month: 6
+  day: 14
+
+early_morning:
+  start_hour: 4
+  start_min: 60
+  end_hour: 5
+  end_min: 10
+
+early_night:
+  start_hour: 4
+  start_min: 60
+  end_hour: 5
+  end_min: 10
+
+late_morning:
+  start_hour: 4
+  start_min: 60
+  end_hour: 5
+  end_min: 10
+
+late_night:
+  start_hour: 4
+  start_min: 60
+  end_hour: 5
+  end_min: 10
+
