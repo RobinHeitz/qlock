@@ -103,8 +103,10 @@ def determineClockState(local_time, early_m, early_n, late_m, late_n):
 
         if morning_time_start <= local_time < morning_time_end:
             newState = CLOCK_STATE_SHOW_GOOD_MORNING
+            print("CLOCKSTATE = CLOCKSTATE GOOD MORNING")
         elif night_time_start <= local_time < night_time_end:
             newState = CLOCK_STATE_SHOW_GOOD_NIGHT
+            print("CLOCKSTATE = CLOCKSTATE GOOD NIGHT")
         else:
             newState = CLOCK_STATE_NORMAL
 
