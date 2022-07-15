@@ -14,7 +14,7 @@ CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 START_HOUR = "start_hour"
 START_MIN = "start_min"
 END_HOUR = "end_hour"
-END_MIN = "end_hour"
+END_MIN = "end_min"
 
 
 def next_hour(current_h):

@@ -31,4 +31,4 @@ def load_config_from_file():
 
 if __name__ == "__main__":
 
-    print(get_config())
+    print(load_config_from_file())
