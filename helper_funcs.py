@@ -109,6 +109,7 @@ def determineClockState(local_time, early_m, early_n, late_m, late_n):
             print("CLOCKSTATE = CLOCKSTATE GOOD NIGHT")
         else:
             newState = CLOCK_STATE_NORMAL
+            print("CLOCKSTATE = NORMAL")
 
         
         return newState
