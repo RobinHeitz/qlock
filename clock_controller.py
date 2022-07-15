@@ -94,6 +94,7 @@ class ClockController:
         self.cfg_birthday, self.cfg_early_morning, self.cfg_early_night, self.cfg_late_morning, self.cfg_late_night = load_config_from_file()
 
         logger.debug("ClockController init() done. Start clocking now.")
+        self.old_minute = None
         self.clock()
 
 
@@ -215,33 +216,15 @@ class ClockController:
         day = self.cfg_birthday.get('day')
         return m == month and d == day
         
-
-
+    
     def clock(self):
         try:
             while True:
-                logger.info("Clock()")
-                
-                local_time, y, m, d, hour, min = self._get_time_items()
-                self._is_birthday = self._check_birthday(m,d)
-
-                current_clock_state = determineClockState(local_time, self.cfg_early_morning, self.cfg_early_night, self.cfg_late_morning, self.cfg_late_night)
-
-                self._activate_birthday_pixels(m,d)
-                
-                if current_clock_state == CLOCK_STATE_NORMAL:
-                    self._clock_state_normal(min,hour)
-
-                elif current_clock_state == CLOCK_STATE_SHOW_GOOD_MORNING:
-                   self._clock_state_show_good_morning()
-                else:
-                    self._clock_state_show_good_night()
-
-                
-
-                self._execute_pixel_changes()
+                minute = datetime.now().minute
+                if self.old_minute != minute:
+                    self.old_minute = minute
+                    self.update_clock()
                 time.sleep(1)
-
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt")
             self.deactivate_all_pixels()
@@ -249,6 +232,30 @@ class ClockController:
         except Exception as e:
             logger.error(f"Exception was thrown: {e}")
             self.deactivate_all_pixels()
+
+
+
+    def update_clock(self):
+        logger.info("Clock()")
+        
+        local_time, y, m, d, hour, min = self._get_time_items()
+        self._is_birthday = self._check_birthday(m,d)
+
+        current_clock_state = determineClockState(local_time, self.cfg_early_morning, self.cfg_early_night, self.cfg_late_morning, self.cfg_late_night)
+
+        self._activate_birthday_pixels(m,d)
+        
+        if current_clock_state == CLOCK_STATE_NORMAL:
+            self._clock_state_normal(min,hour)
+
+        elif current_clock_state == CLOCK_STATE_SHOW_GOOD_MORNING:
+            self._clock_state_show_good_morning()
+        else:
+            self._clock_state_show_good_night()
+
+        
+        self._execute_pixel_changes()
+
                 
     
         
