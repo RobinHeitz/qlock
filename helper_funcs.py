@@ -82,8 +82,6 @@ def determineClockState(local_time, early_m, early_n, late_m, late_n):
         if local_time.isoweekday() <= 5:
             morning_time_start = local_time.replace(hour=early_m.get(START_HOUR), minute=early_m.get(START_MIN), second=0, microsecond=0)
             morning_time_end = local_time.replace(hour=early_m.get(END_HOUR), minute=early_m.get(END_MIN), second=0, microsecond=0)
-            print("ITS EARLY MORNING!", morning_time_start)
-            print("ITS EARLY MORNING!", morning_time_end)
         else:
             print("ITS LATE MORNING!")
             morning_time_start = local_time.replace(hour=late_m.get(START_HOUR), minute=late_m.get(START_MIN), second=0, microsecond=0)
@@ -93,8 +91,6 @@ def determineClockState(local_time, early_m, early_n, late_m, late_n):
         if 5 <= local_time.isoweekday() <= 6:
             night_time_start = local_time.replace(hour=late_n.get(START_HOUR), minute=late_n.get(START_MIN), second=0, microsecond=0)
             night_time_end = local_time.replace(hour=late_n.get(END_HOUR), minute=late_n.get(END_MIN), second=0, microsecond=0)
-            print("ITS LATE NIGHT!!!", night_time_start)
-            print("ITS LATE NIGHT!!!", night_time_end)
 
         else:
             print("ITS EARLY NIGHT!!!")
