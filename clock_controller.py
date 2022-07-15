@@ -190,7 +190,7 @@ class ClockController:
         self.add_new_pixels(current_hour_word)
 
     def _clock_state_show_good_morning(self):
-        if self._is_birthday:
+        if self._is_birthday():
             good_morning_pixels = WD_GOOD_MORNING
         else:
             good_morning_pixels  = WD_GOOD_MORNING +  WD_CHARLY
@@ -198,7 +198,7 @@ class ClockController:
 
     
     def _clock_state_show_good_night(self):
-        if self._is_birthday:
+        if self._is_birthday():
             good_night_pixels = WD_GOOD_NIGHT
         else:
             good_night_pixels = WD_GOOD_NIGHT + WD_CHARLY
@@ -206,7 +206,7 @@ class ClockController:
 
 
     def _activate_birthday_pixels(self, m,d):
-        if self._is_birthday:
+        if self._is_birthday():
             self.add_new_pixels(WD_HAPPY_BD + WD_CHARLY, color=(28,217,230))
     
     def _is_birthday(self, m, d):
