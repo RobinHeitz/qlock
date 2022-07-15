@@ -190,7 +190,7 @@ class ClockController:
         self.add_new_pixels(current_hour_word)
 
     def _clock_state_show_good_morning(self):
-        if self._is_birthday():
+        if self._is_birthday:
             good_morning_pixels = WD_GOOD_MORNING
         else:
             good_morning_pixels  = WD_GOOD_MORNING +  WD_CHARLY
@@ -198,7 +198,7 @@ class ClockController:
 
     
     def _clock_state_show_good_night(self):
-        if self._is_birthday():
+        if self._is_birthday:
             good_night_pixels = WD_GOOD_NIGHT
         else:
             good_night_pixels = WD_GOOD_NIGHT + WD_CHARLY
@@ -206,10 +206,10 @@ class ClockController:
 
 
     def _activate_birthday_pixels(self, m,d):
-        if self._is_birthday():
+        if self._is_birthday:
             self.add_new_pixels(WD_HAPPY_BD + WD_CHARLY, color=(28,217,230))
     
-    def _is_birthday(self, m, d):
+    def _check_birthday(self, m, d):
         print("CONFIG:", month, day)
         month = self.cfg_birthday.get('month')
         day = self.cfg_birthday.get('day')
@@ -221,7 +221,9 @@ class ClockController:
         try:
             while True:
                 logger.info("Clock()")
+                
                 local_time, y, m, d, hour, min = self._get_time_items()
+                self._is_birthday = self._check_birthday(m,d)
 
                 current_clock_state = determineClockState(local_time, self.cfg_early_morning, self.cfg_early_night, self.cfg_late_morning, self.cfg_late_night)
 
