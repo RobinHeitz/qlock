@@ -10,15 +10,22 @@ CLOCK_STATE_NORMAL = "CLOCK_STATE_NORMAL"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
 CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
-WEEKDAY_MORNING_START = (6,15) #hour, min
-WEEKDAY_MORNING_END = (6,45)
-WEEKDAY_NIGHT_START = (21,15)
-WEEKDAY_NIGHT_END = (22,0)
+# Keys for dictionary
+START_HOUR = "start_hour"
+START_MIN = "start_min"
+END_HOUR = "end_hour"
+END_MIN = "end_hour"
 
-WEEKEND_MORNING_START = (9,0)
-WEEKEND_MORNING_END = (10,0)
-WEEKEND_NIGHT_START = (22,30)
-WEEKEND_NIGHT_END = (23,0)
+
+# WEEKDAY_MORNING_START = (6,15) #hour, min
+# WEEKDAY_MORNING_END = (6,45)
+# WEEKDAY_NIGHT_START = (21,15)
+# WEEKDAY_NIGHT_END = (22,0)
+
+# WEEKEND_MORNING_START = (9,0)
+# WEEKEND_MORNING_END = (10,0)
+# WEEKEND_NIGHT_START = (22,30)
+# WEEKEND_NIGHT_END = (23,0)
 
 def next_hour(current_h):
         if current_h == 23:
@@ -78,27 +85,25 @@ def hour_wording_rep(min,hour):
 
 
 
-def determineClockState(local_time):
+def determineClockState(local_time, early_m, early_n, late_m, late_n):
         newState = None
-
-
 
         # morning routine:
         if local_time.isoweekday() <= 5:
-            morning_time_start = local_time.replace(hour=WEEKDAY_MORNING_START[0], minute=WEEKDAY_MORNING_START[1], second=0, microsecond=0)
-            morning_time_end = local_time.replace(hour=WEEKDAY_MORNING_END[0], minute=WEEKDAY_MORNING_END[1], second=0, microsecond=0)
+            morning_time_start = local_time.replace(hour=early_m.get(START_HOUR), minute=early_m.get(START_MIN), second=0, microsecond=0)
+            morning_time_end = local_time.replace(hour=early_m.get(END_HOUR), minute=early_m.get(END_MIN), second=0, microsecond=0)
         else:
-            morning_time_start = local_time.replace(hour=WEEKEND_MORNING_START[0], minute=WEEKDAY_MORNING_START[1], second=0, microsecond=0)
-            morning_time_end = local_time.replace(hour=WEEKEND_MORNING_END[0], minute=WEEKEND_MORNING_END[1], second=0, microsecond=0)
+            morning_time_start = local_time.replace(hour=late_m.get(START_HOUR), minute=late_m.get(START_MIN), second=0, microsecond=0)
+            morning_time_end = local_time.replace(hour=late_m.get(END_HOUR), minute=late_m.get(END_MIN), second=0, microsecond=0)
         
         # night routine
         if 5 <= local_time.isoweekday() <= 6:
-            night_time_start = local_time.replace(hour=WEEKEND_NIGHT_START[0], minute=WEEKEND_NIGHT_START[1], second=0, microsecond=0)
-            night_time_end = local_time.replace(hour=WEEKEND_NIGHT_END[0], minute=WEEKEND_NIGHT_END[1], second=0, microsecond=0)
+            night_time_start = local_time.replace(hour=late_n.get(START_HOUR), minute=late_n.get(START_MIN), second=0, microsecond=0)
+            night_time_end = local_time.replace(hour=late_n.get(END_HOUR), minute=late_n.get(END_MIN), second=0, microsecond=0)
 
         else:
-            night_time_start = local_time.replace(hour=WEEKDAY_NIGHT_START[0], minute=WEEKDAY_NIGHT_START[1], second=0, microsecond=0)
-            night_time_end = local_time.replace(hour=WEEKDAY_NIGHT_END[0], minute=WEEKDAY_NIGHT_END[1], second=0, microsecond=0)
+            night_time_start = local_time.replace(hour=early_n.get(START_HOUR), minute=early_n.get(START_MIN), second=0, microsecond=0)
+            night_time_end = local_time.replace(hour=early_n.get(END_HOUR), minute=early_n.get(END_MIN), second=0, microsecond=0)
 
         
         # print("morning time start/end = ", morning_time_start, morning_time_end)

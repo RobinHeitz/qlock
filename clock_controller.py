@@ -41,7 +41,7 @@ CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
 STD_COL = (255,255,255)
 
-BIRTH_DATE = (6,14) # (month, day)
+# BIRTH_DATE = (6,14) # (month, day)
 # BIRTH_DATE = (7,5) # (month, day)
 
 
@@ -160,6 +160,7 @@ class ClockController:
 
         self.strip.show()
 
+    
     def deactivate_all_pixels(self):
         if not is_raspberrypi():
             return
@@ -215,7 +216,7 @@ class ClockController:
                 logger.info("Clock()")
                 local_time, y, m, d, hour, min = self._get_time_items()
 
-                current_clock_state = determineClockState(local_time)
+                current_clock_state = determineClockState(local_time, self.cfg_early_morning, self.cfg_early_night, self.cfg_late_morning, self.cfg_late_night)
 
                 self._check_birthday(m, d)
                 
