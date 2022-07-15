@@ -82,6 +82,7 @@ class ClockController:
 
     def __init__(self):
 
+
         if is_raspberrypi():
             from rpi_ws281x import Adafruit_NeoPixel
             self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
@@ -210,7 +211,6 @@ class ClockController:
             self.add_new_pixels(WD_HAPPY_BD + WD_CHARLY, color=(28,217,230))
     
     def _check_birthday(self, m, d):
-        print("CONFIG:", month, day)
         month = self.cfg_birthday.get('month')
         day = self.cfg_birthday.get('day')
         return m == month and d == day
