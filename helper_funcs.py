@@ -10,12 +10,6 @@ CLOCK_STATE_NORMAL = "CLOCK_STATE_NORMAL"
 CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
 CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
-# Keys for dictionary
-START_HOUR = "start_hour"
-START_MIN = "start_min"
-END_HOUR = "end_hour"
-END_MIN = "end_min"
-
 
 def next_hour(current_h):
         if current_h == 23:

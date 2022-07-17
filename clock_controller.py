@@ -6,7 +6,7 @@ import time
 from pixel_definition import (MIN_POINTS_DEF, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_HAPPY_BD, WD_IT_IS, WD_CHARLY)
 from helper_funcs import translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
-from load_config2 import load_config_from_file
+from load_config import load_config_from_file
 
 
 # LOGGING CONFIGURATION
