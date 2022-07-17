@@ -75,27 +75,36 @@ def hour_wording_rep(min,hour):
 
 
 
-def determineClockState(local_time, early_m, early_n, late_m, late_n):
+def determineClockState(
+    local_time, 
+    early_morning_start, 
+    early_morning_end, 
+    early_night_start, 
+    early_night_end, 
+    late_morning_start, 
+    late_morning_end, 
+    late_night_start, 
+    late_night_end
+    ):
+    
         newState = None
 
         # morning routine:
         if local_time.isoweekday() <= 5:
-            morning_time_start = local_time.replace(hour=early_m.get(START_HOUR), minute=early_m.get(START_MIN), second=0, microsecond=0)
-            morning_time_end = local_time.replace(hour=early_m.get(END_HOUR), minute=early_m.get(END_MIN), second=0, microsecond=0)
+            morning_time_start = local_time.replace(**early_morning_start)
+            morning_time_end = local_time.replace(**early_morning_end)
         else:
-            print("ITS LATE MORNING!")
-            morning_time_start = local_time.replace(hour=late_m.get(START_HOUR), minute=late_m.get(START_MIN), second=0, microsecond=0)
-            morning_time_end = local_time.replace(hour=late_m.get(END_HOUR), minute=late_m.get(END_MIN), second=0, microsecond=0)
+            morning_time_start = local_time.replace(**late_morning_start)
+            morning_time_end = local_time.replace(**late_morning_end)
         
         # night routine
         if 5 <= local_time.isoweekday() <= 6:
-            night_time_start = local_time.replace(hour=late_n.get(START_HOUR), minute=late_n.get(START_MIN), second=0, microsecond=0)
-            night_time_end = local_time.replace(hour=late_n.get(END_HOUR), minute=late_n.get(END_MIN), second=0, microsecond=0)
+            night_time_start = local_time.replace(**late_night_start)
+            night_time_end = local_time.replace(**late_night_end)
 
         else:
-            print("ITS EARLY NIGHT!!!")
-            night_time_start = local_time.replace(hour=early_n.get(START_HOUR), minute=early_n.get(START_MIN), second=0, microsecond=0)
-            night_time_end = local_time.replace(hour=early_n.get(END_HOUR), minute=early_n.get(END_MIN), second=0, microsecond=0)
+            night_time_start = local_time.replace(**early_night_start)
+            night_time_end = local_time.replace(**early_night_end)
 
 
 

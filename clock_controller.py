@@ -6,7 +6,7 @@ import time
 from pixel_definition import (MIN_POINTS_DEF, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_HAPPY_BD, WD_IT_IS, WD_CHARLY)
 from helper_funcs import translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
 
-from load_config import load_config_from_file
+from load_config2 import load_config_from_file
 
 
 # LOGGING CONFIGURATION
@@ -80,6 +80,12 @@ class Pixel:
 
 class ClockController:
 
+    old_pixels = set()
+    new_pixels = set()
+
+    old_minute = None
+
+
     def __init__(self):
 
 
@@ -88,16 +94,30 @@ class ClockController:
             self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
             self.strip.begin()
 
-        self.old_pixels = set()
-        self.new_pixels = set()
+        # self.old_pixels = set()
+        # self.new_pixels = set()
 
-        self.cfg_birthday, self.cfg_early_morning, self.cfg_early_night, self.cfg_late_morning, self.cfg_late_night = load_config_from_file()
-
+        self._load_config()
+        
         logger.debug("ClockController init() done. Start clocking now.")
-        self.old_minute = None
+        # self.old_minute = None
         self.clock()
 
+    def _load_config(self):
+        loaded_config = load_config_from_file()
+        self.cfg_birthday = loaded_config[0]
 
+        self.cfg_times = dict(
+            early_morning_start = loaded_config[1], 
+            early_morning_end = loaded_config[2], 
+            early_night_start = loaded_config[3], 
+            early_night_end = loaded_config[4], 
+            late_morning_start = loaded_config[5], 
+            late_morning_end = loaded_config[6], 
+            late_night_start = loaded_config[7], 
+            late_night_end = loaded_config[8],
+
+        )
 
     def add_new_pixels(self, pixels, color=STD_COL):
         logger.debug(f"add_new_pixels(); No. pixels = {len(pixels)}")
@@ -241,7 +261,10 @@ class ClockController:
         local_time, y, m, d, hour, min = self._get_time_items()
         self._is_birthday = self._check_birthday(m,d)
 
-        current_clock_state = determineClockState(local_time, self.cfg_early_morning, self.cfg_early_night, self.cfg_late_morning, self.cfg_late_night)
+
+        # params = (self.cfg_early_morning_start, self.cfg_early_morning_end, self.cfg_early_night_start, self.cfgeraly)
+
+        current_clock_state = determineClockState(local_time, **self.cfg_times)
 
         self._activate_birthday_pixels(m,d)
         
