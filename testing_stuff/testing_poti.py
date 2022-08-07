@@ -12,7 +12,7 @@ GAIN = 1
 
 
 
-def poti_brightness(current_value):
+def get_poti_brightness(current_value):
     ...
     min_value = 3
     max_value = 32558
@@ -25,11 +25,11 @@ def poti_brightness(current_value):
 
 while True:
     # Read all the ADC channel values in a list.
-    values = [0]*5
+    value = 0
     for i in range(4):
         # Read the specified ADC channel using the previously set gain value.
-        values[i] = adc.read_adc(i, gain=GAIN)
-        values[4] = poti_brightness(values[0])
+        value = adc.read_adc(0, gain=GAIN)
+        # values[4] = poti_brightness(values[0])
         # Note you can also pass in an optional data_rate parameter that controls
         # the ADC conversion time (in samples/second). Each chip has a different
         # set of allowed data rate values, see datasheet Table 9 config register
@@ -38,6 +38,7 @@ while True:
         # Each value will be a 12 or 16 bit signed integer value depending on the
         # ADC (ADS1015 = 12-bit, ADS1115 = 16-bit).
     # Print the ADC values.
-    print('| {0:>6} | {1:>6} | {2:>6} | {3:>6} | {4:>6} '.format(*values))
+    # print('| {0:>6} | {1:>6} | {2:>6} | {3:>6} | {4:>6} '.format(*values))
+    print("Value = ", value, "brightness factor = ", get_poti_brightness(value))
     # Pause for half a second.
     time.sleep(0.5)
