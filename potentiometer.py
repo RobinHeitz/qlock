@@ -1,45 +1,82 @@
 import time
-import Adafruit_ADS1x15
+from threading import Thread, Lock
+
+from random import randint
+
+from helper_funcs import is_raspberrypi
 
 ######################################################
 # ADS1115 chip, each value will be 16 bit int solution
 ######################################################
 
 
-adc = Adafruit_ADS1x15.ADS1115()
 
-GAIN = 1
-# GAIN = 2
+class PotentiometerSampling:
+    __GAIN = 1
+    __poti_brightness = 200
+
+    def __init__(self) -> None:
+        
+        self.__is_raspberry = is_raspberrypi()
+
+        if self.__is_raspberry == True:
+            import Adafruit_ADS1x15
+            self.__adc = Adafruit_ADS1x15.ADS1115()
+
+        self.__lock = Lock()
+        __t = Thread(target=self.__sample_potentiometer_thread, daemon=True)
+        __t.start() 
 
 
+    def get_poti_brightness(self):
+        return self.__poti_brightness
+    
+    def __read_poti_val(self):
+        if self.__is_raspberry:
+            return self.__adc.read_adc(0, gain=self.__GAIN, data_rate = 128)
+        else:
+            return randint(3,32558) 
 
-def get_poti_brightness(current_value):
-    ...
-    min_value = 3
-    max_value = 32558
+    def __get_poti_brightness(self, current_value):
+        ...
+        min_value = 3
+        max_value = 32558
 
-    val_percent = (current_value - min_value) / (max_value - min_value)
+        val_percent = (current_value - min_value) / (max_value - min_value)
 
-    return int(round(255 * val_percent, 0))
+        if val_percent > 1:
+            val_percent = 1
+        
+        if val_percent < 0:
+            val_percent = 0
+
+        brightnes = int(round(255 * val_percent, 0))
+        return brightnes
+        
+
+    def __sample_potentiometer_thread(self):
+        ...
+
+        while True:
+            # value = self.adc.read_adc(0, gain=self.GAIN, data_rate = 128)
+            value = self.__read_poti_val()
+            # print("reading poti val:", value)
+            brightness = self.__get_poti_brightness(value)
+
+            with self.__lock:
+                self.__poti_brightness = brightness
+            time.sleep(0.2)
+            
+
+if __name__ == "__main__":
+        ...
+
+        poti = PotentiometerSampling()
+
+        while True:
+
+            # print("Poti val = ", poti.get_poti_brightness())
+
+            time.sleep(1)
 
 
-
-while True:
-    # Read all the ADC channel values in a list.
-    value = 0
-    for i in range(4):
-        # Read the specified ADC channel using the previously set gain value.
-        value = adc.read_adc(0, gain=GAIN, data_rate = 128)
-        # values[4] = poti_brightness(values[0])
-        # Note you can also pass in an optional data_rate parameter that controls
-        # the ADC conversion time (in samples/second). Each chip has a different
-        # set of allowed data rate values, see datasheet Table 9 config register
-        # DR bit values.
-        #values[i] = adc.read_adc(i, gain=GAIN, data_rate=128)
-        # Each value will be a 12 or 16 bit signed integer value depending on the
-        # ADC (ADS1015 = 12-bit, ADS1115 = 16-bit).
-    # Print the ADC values.
-    # print('| {0:>6} | {1:>6} | {2:>6} | {3:>6} | {4:>6} '.format(*values))
-    print("Value = ", value, "brightness factor = ", get_poti_brightness(value))
-    # Pause for half a second.
-    time.sleep(0.2)
