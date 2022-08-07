@@ -2,6 +2,7 @@
 ## privat usage only! I built this project for a birthday present (see (/img). Deployed on a raspberry pi Zero W.
 
 # Installation:
+## Download Qlock Repo
 - clone github repo 'qlock'
 - sudo pip install rpi_ws281x
 - disable audio kernel module:
@@ -11,6 +12,14 @@
 - Start the script after boot: 
     - on the pi: 'sudo nano /etc/rc.local
     - paste in 'sudo python clock_controller.py' before the last line and save
+
+## Potentiometer installations
+- https://howchoo.com/pi/how-to-install-a-potentiometer-on-a-raspberry-pi#install-an-appropriate-python-library
+- install Adafruit_Python_ADS1x15
+- check if i2c device is found:
+
+- sudo i2cdetect -y 1
+
 
 # Wiring:
 WS281x LED chips are controlled by 5V PWM signal, but RPi only has 3,3V - level shifter needed.
