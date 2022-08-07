@@ -1,10 +1,10 @@
 from datetime import datetime
-from tkinter import E
 import pytz
 import time
 
 from pixel_definition import (MIN_POINTS_DEF, WD_GOOD_MORNING, WD_GOOD_NIGHT, WD_HAPPY_BD, WD_IT_IS, WD_CHARLY)
 from helper_funcs import translate_to_12h_clock_format, clock_words,hour_wording_rep,determineClockState
+from helper_funcs import is_raspberrypi
 
 from load_config import load_config_from_file
 
@@ -45,17 +45,6 @@ STD_COL = (255,255,255)
 # BIRTH_DATE = (7,5) # (month, day)
 
 
-import io
-def is_raspberrypi():
-    try:
-        with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
-            if 'raspberry pi' in m.read().lower(): return True
-    except Exception: pass
-    return False
-
-
-
-
 class Pixel:
  
     def __init__(self, pixel, color=STD_COL) -> None:
@@ -88,8 +77,10 @@ class ClockController:
 
     def __init__(self):
 
+        self.is_raspberry = is_raspberrypi()
 
-        if is_raspberrypi():
+
+        if self.is_raspberry:
             from rpi_ws281x import Adafruit_NeoPixel
             self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
             self.strip.begin()
@@ -168,7 +159,7 @@ class ClockController:
 
 
     def _execute_pixel_changes(self):
-        if not is_raspberrypi():
+        if not self.is_raspberry:
             return
 
         pixels_to_switch_on, pixels_to_switch_off = self.get_pixel_difference()
@@ -184,7 +175,7 @@ class ClockController:
 
     
     def deactivate_all_pixels(self):
-        if not is_raspberrypi():
+        if not self.is_raspberry:
             return
         all_pixels = self.new_pixels | self.old_pixels
         for p in all_pixels:
