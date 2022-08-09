@@ -255,7 +255,7 @@ class ClockController:
                     # Change LED Brigthness 
                     ...
                     self.brigthness = new_brigthness
-                    self._init_strip()
+                    # self._init_strip()
 
 
                 
