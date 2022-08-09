@@ -7,3 +7,5 @@ log.txt
 
 *.log
 .DS_Store
+
+*.yaml
