@@ -95,11 +95,11 @@ class ClockController:
         self.clock()
 
     def _init_strip(self):
-        if self.is_raspberrypi:
+        if self.is_raspberry == True:
             from rpi_ws281x import Adafruit_NeoPixel
             self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, self.brigthness, LED_CHANNEL)
             self.strip.begin()
-
+            
 
     def _load_config(self):
         path = Path(__file__).parent.joinpath("config.yaml")
