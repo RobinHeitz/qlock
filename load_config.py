@@ -1,6 +1,6 @@
 import yaml
 
-def load_config_from_file():
+def load_config_from_file(filepath):
 
     """Returns config loaded from yaml as tuples of dicts.
     
@@ -14,10 +14,10 @@ def load_config_from_file():
     - late morning end
     - late night start
     - late night end
-"""
+    """
     
     try:
-        with open("config.yaml", "r") as stream:
+        with open(filepath, "r") as stream:
             loaded_config = yaml.safe_load(stream)
     except Exception as e:
         print(e)

@@ -7,6 +7,7 @@ from helper_funcs import translate_to_12h_clock_format, clock_words,hour_wording
 from helper_funcs import is_raspberrypi
 
 from load_config import load_config_from_file
+from pathlib import Path
 
 
 # LOGGING CONFIGURATION
@@ -95,7 +96,8 @@ class ClockController:
         self.clock()
 
     def _load_config(self):
-        loaded_config = load_config_from_file()
+        path = Path.home().joinpath("dev","qlock","config.yaml")
+        loaded_config = load_config_from_file(str(path))
         self.cfg_birthday = loaded_config[0]
 
         self.cfg_times = dict(
