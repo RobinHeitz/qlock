@@ -16,7 +16,7 @@ from potentiometer import PotentiometerSampling
 import logging
 logFormatter = logging.Formatter("'%(asctime)s - %(message)s'")
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 fileHandler = logging.FileHandler("clock_controller.log", mode="w")
 fileHandler.setFormatter(logFormatter)
@@ -82,11 +82,11 @@ class ClockController:
     def __init__(self):
 
         self.is_raspberry = is_raspberrypi()
+        self.poti_sampling = PotentiometerSampling()
 
 
         self._init_strip()
 
-        self.poti_sampling = PotentiometerSampling()
 
         self._load_config()
         
@@ -255,7 +255,7 @@ class ClockController:
                     # Change LED Brigthness 
                     ...
                     self.brigthness = new_brigthness
-                    # self._init_strip()
+                    self._init_strip()
 
 
                 

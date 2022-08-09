@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
         while True:
 
-            print("Poti val = ", poti.get_poti_brightness())
+            # print("Poti val = ", poti.get_poti_brightness())
 
             time.sleep(1)
 
