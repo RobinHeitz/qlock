@@ -9,6 +9,8 @@ from helper_funcs import is_raspberrypi
 from load_config import load_config_from_file
 from pathlib import Path
 
+from potentiometer import PotentiometerSampling
+
 
 # LOGGING CONFIGURATION
 import logging
@@ -74,6 +76,7 @@ class ClockController:
     new_pixels = set()
 
     old_minute = None
+    brigthness = 50
 
 
     def __init__(self):
@@ -83,11 +86,10 @@ class ClockController:
 
         if self.is_raspberry:
             from rpi_ws281x import Adafruit_NeoPixel
-            self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+            self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, self.brigthness, LED_CHANNEL)
             self.strip.begin()
 
-        # self.old_pixels = set()
-        # self.new_pixels = set()
+        self.poti_sampling = PotentiometerSampling()
 
         self._load_config()
         
@@ -234,13 +236,29 @@ class ClockController:
         
     
     def clock(self):
+        """
+        Main loop which is started after init and controls led strip."""
+
         try:
             while True:
                 minute = datetime.now().minute
                 if self.old_minute != minute:
                     self.old_minute = minute
                     self.update_clock()
-                time.sleep(1)
+                
+                new_brigthness = self.poti_sampling.get_poti_brightness()
+                if self.brigthness != new_brigthness:
+                    # Change LED Brigthness 
+                    ...
+                    self.brigthness = new_brigthness
+                    self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, self.brigthness, LED_CHANNEL)
+
+
+                
+                time.sleep(0.1)
+        
+        
+        
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt")
             self.deactivate_all_pixels()
