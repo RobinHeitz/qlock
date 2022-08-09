@@ -84,28 +84,21 @@ class ClockController:
         self.is_raspberry = is_raspberrypi()
         self.poti_sampling = PotentiometerSampling()
 
-
-        self._init_strip()
+        if self.is_raspberry == True:
+            from rpi_ws281x import Adafruit_NeoPixel
+            self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, self.brigthness, LED_CHANNEL)
+            self.strip.begin()
 
 
         self._load_config()
         
         logger.debug("ClockController init() done. Start clocking now.")
-        # self.old_minute = None
         self.clock()
 
-    def _init_strip(self):
-        if self.is_raspberry == True:
-            from rpi_ws281x import Adafruit_NeoPixel
-            self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, self.brigthness, LED_CHANNEL)
-            self.strip.begin()
-            
 
     def _load_config(self):
         path = Path(__file__).parent.joinpath("config.yaml")
         
-        # print(str(path))
-
         loaded_config = load_config_from_file(str(path))
         self.cfg_birthday = loaded_config[0]
 
@@ -253,16 +246,11 @@ class ClockController:
                 new_brigthness = self.poti_sampling.get_poti_brightness()
                 if self.brigthness != new_brigthness:
                     # Change LED Brigthness 
-                    ...
                     logger.warning(f"New Brigthness: {new_brigthness} / old = {self.brigthness}")
                     self.brigthness = new_brigthness
-                    # self._init_strip()
                     self.strip.setBrightness(new_brigthness)
                     self.strip.show()
-
-
-                
-                time.sleep(0.1)
+                time.sleep(0.2)
         
         
         
