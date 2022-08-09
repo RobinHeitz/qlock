@@ -84,10 +84,7 @@ class ClockController:
         self.is_raspberry = is_raspberrypi()
 
 
-        if self.is_raspberry:
-            from rpi_ws281x import Adafruit_NeoPixel
-            self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, self.brigthness, LED_CHANNEL)
-            self.strip.begin()
+        self._init_strip()
 
         self.poti_sampling = PotentiometerSampling()
 
@@ -96,6 +93,13 @@ class ClockController:
         logger.debug("ClockController init() done. Start clocking now.")
         # self.old_minute = None
         self.clock()
+
+    def _init_strip(self):
+        if self.is_raspberrypi:
+            from rpi_ws281x import Adafruit_NeoPixel
+            self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, self.brigthness, LED_CHANNEL)
+            self.strip.begin()
+
 
     def _load_config(self):
         path = Path(__file__).parent.joinpath("config.yaml")
@@ -251,7 +255,7 @@ class ClockController:
                     # Change LED Brigthness 
                     ...
                     self.brigthness = new_brigthness
-                    self.strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, self.brigthness, LED_CHANNEL)
+                    self._init_strip()
 
 
                 
