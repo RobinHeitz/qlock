@@ -258,6 +258,7 @@ class ClockController:
                     self.brigthness = new_brigthness
                     # self._init_strip()
                     self.strip.setBrightness(new_brigthness)
+                    self.strip.show()
 
 
                 
