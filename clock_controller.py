@@ -96,7 +96,10 @@ class ClockController:
         self.clock()
 
     def _load_config(self):
-        path = Path.home().joinpath("dev","qlock","config.yaml")
+        path = Path(__file__).parent.joinpath("config.yaml")
+        
+        # print(str(path))
+
         loaded_config = load_config_from_file(str(path))
         self.cfg_birthday = loaded_config[0]
 
