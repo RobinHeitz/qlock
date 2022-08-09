@@ -257,6 +257,7 @@ class ClockController:
                     logger.warning(f"New Brigthness: {new_brigthness} / old = {self.brigthness}")
                     self.brigthness = new_brigthness
                     # self._init_strip()
+                    self.strip.setBrightness(new_brigthness)
 
 
                 
