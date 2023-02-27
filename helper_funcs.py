@@ -15,6 +15,7 @@ CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
 import io
 def is_raspberrypi():
+    """Checks if device is raspberrypi and returns True if so."""
     try:
         with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
             if 'raspberry pi' in m.read().lower(): return True
@@ -24,9 +25,8 @@ def is_raspberrypi():
 
 
 def next_hour(current_h):
-        if current_h == 23:
-            return 0
-        return current_h+1
+    """Inputs an hour and adds one to it (needed for differences between 12:29 -> 'its 29 past 12' and 12:30 'its half past 1')."""
+    return (current_h + 1)%24
 
 
 def translate_to_12h_clock_format(h):
@@ -63,6 +63,9 @@ def clock_words(min):
 
 
 def hour_wording_rep(min,hour):
+    """Returns a list of pixels based on current hour. 
+    - Translates hours to 12h format (if needed)
+    - adds an additional hour for minutes [25,60)"""
     
     returnPixels = []
     
