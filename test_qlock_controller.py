@@ -8,8 +8,9 @@ from qlock.constants import CONFIG_FILE_NAME
 from hw_interface.fake_hardware import QlockFakeHardwareInterface
 # from qlock.time_helpers import create_dt
 
-# Helper functions
-
+####################
+# Helper functions #
+####################
 def setup_controller():
     config = load_config(CONFIG_FILE_NAME)
     return QlockController(config, QlockFakeHardwareInterface())
@@ -29,8 +30,10 @@ def _testing_modes(time, expected_mode):
     assert len(modes) == 2
     
 
+#########
+# Tests #
+#########
 
-# Tests
 @pytest.mark.parametrize("month, day, is_bd", [
     (1,1, False),
     (10,10, False),

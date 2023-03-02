@@ -1,11 +1,6 @@
 import yaml
 
 
-
-
-
-
-
 def load_config(path):
     """Loads yaml config file.
     
