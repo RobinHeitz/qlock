@@ -1,3 +1,6 @@
+from strenum import StrEnum
+
+
 # LED STRIP CONFIGURATION
 LED_COUNT      = 16**2      # Number of LED pixels.
 LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
@@ -10,8 +13,12 @@ LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 CONFIG_FILE_NAME = "qlock.yaml"
 
 
-CLOCK_STATE_NORMAL = "CLOCK_STATE_NORMAL"
-CLOCK_STATE_SHOW_GOOD_MORNING = "CLOCK_STATE_SHOW_GOOD_MORNING"
-CLOCK_STATE_SHOW_GOOD_NIGHT = "CLOCK_STATE_SHOW_GOOD_NIGHT"
 
 STANDARD_COLOR = (255,255,255)
+
+class QlockMode(StrEnum):
+    mode_normal = "mode_normal"
+    mode_birthday = "mode_birthday"
+    mode_morning = "mode_morning"
+    mode_night = "mode_night"
+    
