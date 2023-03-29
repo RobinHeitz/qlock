@@ -29,10 +29,8 @@ def main():
 
 
     config = load_config(CONFIG_FILE_NAME)
-    controller = QlockController(config=config, hw = hw_interface())
-
-
-
+    qlock = QlockController(config=config, hw = hw_interface())
+    qlock.clock()
 
 
 

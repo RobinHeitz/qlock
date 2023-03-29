@@ -1,5 +1,5 @@
 from strenum import StrEnum
-
+from enum import Enum
 
 # LED STRIP CONFIGURATION
 LED_COUNT      = 16**2      # Number of LED pixels.
@@ -14,7 +14,20 @@ CONFIG_FILE_NAME = "qlock.yaml"
 
 
 
-STANDARD_COLOR = (255,255,255)
+class Color(Enum):
+    white = (255,255,255)
+    black = (0,0,0)
+    red = (255,0,0)
+    green = (0,255,0)
+    blue = (0,0,255)
+    purple = (102,0,204)
+    pink = (204,0,204)
+    turquoise = (0,255,255)
+
+
+    def __str__(self):
+        return f"Color: {self.name} | {self.value}"
+
 
 class QlockMode(StrEnum):
     mode_normal = "mode_normal"

@@ -1,7 +1,11 @@
 import pytz
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, List
+
 from .constants import QlockMode
+from .pixel_definition import (
+    WD_5_MIN_AFTER, WD_5_MIN_AFTER_HALF, WD_5_MIN_BEFORE_HALF, WD_10_MIN_AFTER, WD_HALF,
+    WD_5_BEFORE, WD_10_BEFORE, WD_15_BEFORE, WD_20_BEFORE, WD_15_MIN_AFTER, WD_20_MIN_AFTER, WD_1_O_CLOCK)
 
 
 def create_dt(year, month, day, hour, minute, **kwargs) -> datetime:
@@ -89,3 +93,66 @@ def get_clock_mode(early_day_times:dict, late_day_times:dict, now:datetime) -> Q
         return QlockMode.mode_night
     return QlockMode.mode_normal
 
+
+def get_minute_word(minutes:int) -> List[int]:
+    """Returns a list of pixel indices (pixels) which should be active for a given minute."""
+    if 0 <= minutes < 5:
+        return []
+    elif 5 <= minutes < 10:
+        return WD_5_MIN_AFTER
+    elif 10 <= minutes < 15:
+        return WD_10_MIN_AFTER
+    elif 15 <= minutes < 20:
+        return WD_15_MIN_AFTER
+    elif 20 <= minutes < 25:
+        return WD_20_MIN_AFTER
+    elif 25<= minutes < 30:
+        return WD_5_MIN_BEFORE_HALF
+    elif 30<= minutes < 35:
+        return WD_HALF
+    elif 35<= minutes < 40:
+        return WD_5_MIN_AFTER_HALF
+    elif 40<= minutes < 45:
+        return WD_20_BEFORE
+    elif 45<= minutes < 50:
+        return WD_15_BEFORE
+    elif 50<= minutes < 55:
+        return WD_10_BEFORE
+    elif minutes >= 55:
+        return WD_5_BEFORE
+
+
+def get_hour_word(hour:int, minute:int):
+    """Returns a list of pixels representing the 'hour-word' like 'FIVE'."""
+    pixels = list()
+
+    #edge case with 1 o' clock
+    if hour == 1 and minute <5:
+        pixels.append(*WD_1_O_CLOCK)
+    return pixels
+
+
+
+
+
+
+
+# def hour_wording_rep(min,hour):
+#     """Returns a list of pixels based on current hour. 
+#     - Translates hours to 12h format (if needed)
+#     - adds an additional hour for minutes [25,60)"""
+    
+#     returnPixels = []
+    
+#     if min >= 25:
+#         hour = translate_to_12h_clock_format(next_hour(hour))
+
+#     if hour == 1 and min < 5:
+#         returnPixels = returnPixels + WD_1_O_CLOCK
+#     else:
+#         returnPixels = returnPixels + HOUR_DEF.get(hour,[])
+    
+#     if min < 5:
+#         #display 'UHR' additionally
+#         returnPixels = returnPixels + WD_CLOCK
+#     return returnPixels

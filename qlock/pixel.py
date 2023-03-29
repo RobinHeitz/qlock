@@ -1,4 +1,4 @@
-from .constants import STANDARD_COLOR
+from .constants import Color
 from typing import Tuple
 
 
@@ -10,7 +10,7 @@ class Pixel:
     """
 
  
-    def __init__(self, pixel:int, color:Tuple[int, int, int]=STANDARD_COLOR) -> None:
+    def __init__(self, pixel:int, color:Tuple[int, int, int]=Color.white.value) -> None:
         self.pixel = pixel
         self.color = color
 
@@ -27,3 +27,19 @@ class Pixel:
 
     def __hash__(self) -> int:
         return hash(self.pixel)
+
+
+# def create_pxls(pixels, color: Tuple[int, int, int] = STANDARD_COLOR) -> set:
+#     """Method for creating many Pixel objects.
+    
+#     Params:
+#     - pixels (iterable): int's for the pixel index.
+#     - color (tuple of ints): Color of the pixel, defined as values [0; 255]. Default is (255,255,255).
+    
+#     Returns a set of Pixel-objects."""
+#     p = set()
+#     for item in pixels:
+#         p.add(
+#             Pixel(item, color)
+#         )
+#     return p

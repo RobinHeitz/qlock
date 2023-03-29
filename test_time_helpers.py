@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
 
-from qlock.time_helpers import shift_hour, transform_hours_to_clock_format, get_clock_mode, create_dt, localized_dt
+from qlock.time_helpers import shift_hour, transform_hours_to_clock_format, get_clock_mode, create_dt, localized_dt, get_hour_word, get_minute_word
 from qlock.constants import QlockMode
 
 
@@ -151,5 +151,26 @@ def test_get_clock_mode_late_night(hour, minute, expected_clock_mode:QlockMode):
     time = create_dt(year=2023, month=3, day=3, hour=hour, minute=minute)
     mode = get_clock_mode(early_times, late_times, time)
     assert mode == expected_clock_mode
+
+
+from qlock.pixel_definition import WD_1, WD_1_O_CLOCK, WD_2, WD_3_1, WD_3_2, WD_4, WD_5_1, WD_5_2, WD_6, WD_7, WD_8, WD_9, WD_10_1, WD_10_2, WD_11, WD_12
+
+
+@pytest.mark.parametrize("hour, minute, expected_pixels", [
+    (1,0, WD_1_O_CLOCK),
+])
+def test_get_hour_word(hour, minute, expected_pixels):
+    ...
+
+    pixels = set(get_hour_word(hour, minute))
+    expected = set(expected_pixels)
+    assert pixels == expected
+
+
+
+
+
+def test_get_minute_word():
+    ...
 
 
