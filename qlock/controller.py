@@ -108,7 +108,7 @@ class QlockController:
         }
         
         pixels_func = mode_map.get(state)
-        pixels = pixels.update(pixels_func(hour, minutes))
+        pixels.update(pixels_func(hour, minutes))
 
         return pixels
 
@@ -157,9 +157,12 @@ class QlockController:
         
         Returns a tuple of pixels_to_turn_on, pixels_to_turn_off
         """
-        logger.info(f"compute_pixel_changes")
+        logger.info(f"compute_pixel_changes: new_pixels = {new_pixels}")
         pixels_to_turn_on = new_pixels - self.current_pixels
         pixels_to_turn_off = self.current_pixels - new_pixels
+
+        logger.info(f"pixels_to_turn_on: {type(pixels_to_turn_on)}")
+        logger.info(f"pixels_to_turn_off: {type(pixels_to_turn_off)}")
 
         self.current_pixels = new_pixels
         return pixels_to_turn_on, pixels_to_turn_off
