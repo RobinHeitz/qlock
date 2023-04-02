@@ -13,29 +13,6 @@ from rich.live import Live
 from rich.table import Table
 
 
-def generate_table() -> Table:
-    """Make a new table."""
-    table = Table()
-    table.add_column("ID")
-    table.add_column("Value")
-    table.add_column("Status")
-
-    for row in range(random.randint(2, 6)):
-        value = random.random() * 100
-        table.add_row(
-            f"{row}", f"{value:3.2f}", "[red]ERROR" if value < 50 else "[green]SUCCESS"
-        )
-    return table
-
-
-with Live(generate_table(), refresh_per_second=4) as live:
-    for _ in range(40):
-        time.sleep(0.4)
-        live.update(generate_table())
-
-
-
-
 class ConsoleOutputHardwareInterface:
     ...
 
@@ -51,56 +28,74 @@ class ConsoleOutputHardwareInterface:
         self.current_pixels = initial_pixels
 
     
-        table = self.__generate_table(self.current_pixels)     
+        table = self.__generate_table(self.current_pixels, self.width, self.height)     
         c = Console()
         c.print(table)   
 
     
     
-    def __generate_table(self, data:Iterable[Pixel]) -> Table:
+    def __generate_table(self, data:Iterable[Pixel], width:int, height:int) -> Table:
         ...
 
-        table = Table("My Table Header")
+        def init_new_row():
+            return ["o"]*width
+        
+        def is_inv(row:int) -> bool:
+            return row % 2 == 1
+        
+        def add_to_table(row: list):
+            print("row was added to table: ", *row)
+            table.add_row(*row)
+
+
+        table = Table("My Table Header",show_header=False)
+
+        for _ in range(self.width - 1):
+            table.add_column(justify="center", no_wrap=True)
+
 
         data_list = list(data)
-        data_list = sorted(data_list, key=lambda item: item.pixel)
+        data_list = sorted(data_list, key=lambda item: item.pixel_index)
 
-        for item in data_list:
-            print(item)
+        cur_row_index = 0
+        cur_column_index = 0
+
+        # cur_row = ...
+
+        cur_row = init_new_row()
+
+        while len(data_list) > 0:
+            cur_pixel = data_list.pop(0)
+            print(f"--- pop item|| row: {cur_row_index}, col: {cur_column_index} Actual INDEX: {cur_pixel.pixel_index}")
+
+            pixel_row = cur_pixel.pixel_index // width
+            pixel_column =cur_pixel.pixel_index % width
+
+            print(f"+ pixel_row: {pixel_row} pixel_column: {pixel_column}")
+            
+            if pixel_row != cur_row_index:
+                for row_ in range(cur_row_index, pixel_row):
+                    
+                    if is_inv(row_):
+                        cur_row = cur_row[::-1]
+                    add_to_table(cur_row)
+                    cur_row = init_new_row()
+            
+            cur_row[pixel_column] = "X"
 
 
 
+            # update 
+            cur_row_index = pixel_row
+            cur_column_index = pixel_column
+        return table
 
-
-        for _ in range(self.width):
-            self.table.add_column(justify="center", style="cyan", no_wrap=True)
-
-    
-
-    def update(self, pixels: Iterable[Pixel]):
-        ...
-
-
-
-
-
-        
-        table = Table(title="Console Output Hardware", show_header=False)
-
-        table.add_column(justify="center", style="cyan",no_wrap=True)
-        table.add_column(justify="center", style="cyan",no_wrap=True)
-        table.add_column(justify="center", style="cyan",no_wrap=True)
-        
-        table.add_row(*["x"]*3)
-
-        console = Console()
-        console.print(table)
 
 
 if __name__ == "__main__":
 
-    WIDTH = 16
-    HEIGHT = 16
+    WIDTH = 8
+    HEIGHT = 4
 
     def rand_color():
         return (randint(0,255), randint(0,255), randint(0,255))
@@ -109,7 +104,15 @@ if __name__ == "__main__":
         return randint(0, WIDTH*HEIGHT -1)    
 
 
-    pixels = [Pixel(rand_index(),rand_color()) for _ in range(30)]
+    # pixels = {Pixel(rand_index(),rand_color()) for _ in range(30)}
 
+    pixels = [
+        Pixel(0, rand_color()),
+        Pixel(5, rand_color()),
+        Pixel(8, rand_color()),
+        Pixel(15, rand_color()),
+        Pixel(20, rand_color()),
+        Pixel(24, rand_color()),
+    ]
 
-    ConsoleOutputHardwareInterface(WIDTH, HEIGHT, pixels)
+    ConsoleOutputHardwareInterface(width=WIDTH, height=HEIGHT, initial_pixels=pixels)

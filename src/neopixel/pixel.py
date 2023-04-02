@@ -8,20 +8,20 @@ class Pixel:
     """
 
  
-    def __init__(self, pixel:int, color:Tuple[int, int, int]=(255,255,255)) -> None:
-        self.pixel = pixel
+    def __init__(self, pixel_index:int, color:Tuple[int, int, int]=(255,255,255)) -> None:
+        self.pixel_index = pixel_index
         self.color = color
 
     def __str__(self) -> str:
-        return f"P: {self.pixel}"
+        return f"P: {self.pixel_index}"
 
     def __repr__(self) -> str:
-        return f"P: {self.pixel}"
+        return f"Pixel with index: {self.pixel_index} | color: {self.color}"
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, Pixel) and other.pixel == self.pixel and other.color == self.color:
+        if isinstance(other, Pixel) and other.pixel_index == self.pixel_index and other.color == self.color:
             return True
         return False
 
     def __hash__(self) -> int:
-        return hash(self.pixel)
+        return hash(self.pixel_index)
