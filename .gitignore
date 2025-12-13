@@ -1,4 +1,4 @@
-env/
+qlockv1/env/
 qlock-env/
 .vscode/
 *.pyc
@@ -9,3 +9,6 @@ log.txt
 .DS_Store
 
 *.yaml
+
+qlockv2/cqlock
+qlockv2/bledctrl
