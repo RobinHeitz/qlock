@@ -71,7 +71,7 @@ class ConsoleOutputHardwareInterface:
     def create_table(self, rows:list) -> Table:
 
         # table = Table.grid(expand=True)
-        table = Table("My Table Header",show_header=False, padding=(0,0), show_edge=False, show_lines=False, show_footer=False)
+        table = Table("My Table Header",show_header=False, padding=(0,0), show_edge=True, show_lines=False, show_footer=False)
 
         for _ in range(self.width - 1):
             table.add_column(justify="center", no_wrap=True, width=1)
