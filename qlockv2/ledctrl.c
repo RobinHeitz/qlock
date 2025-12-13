@@ -1,6 +1,68 @@
 #include "ledctrl.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+
+qlock_time get_time() {
+  time_t rawtime;
+  struct tm *timeinfo;
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
+  /* printf("Current time and date: %s \n", asctime(timeinfo)); */
+  /* printf("year %d\n", timeinfo->tm_year); */
+  /* printf("month %d\n", timeinfo->tm_mon); */
+  /* printf("mday %d\n", timeinfo->tm_mday); */
+  /* printf("hour %d\n", timeinfo->tm_hour); */
+  /* printf("min %d\n", timeinfo->tm_min); */
+  /* printf("sec %d\n", timeinfo->tm_sec); */
+  /* printf("wday %d\n", timeinfo->tm_wday); */
+  /* printf("yday %d\n", timeinfo->tm_yday); */
+
+  qlock_time qt;
+  qt.month = timeinfo->tm_mon + 1;
+  qt.day = timeinfo->tm_mday;
+  int w_day = timeinfo->tm_wday;
+  qt.weekend = w_day == 6 || w_day == 0;
+  qt.hour = timeinfo->tm_hour;
+  qt.min = timeinfo->tm_min;
+  qt.sec = timeinfo->tm_sec;
+  return qt;
+}
+
+void qlocktime_print(qlock_time *qt) {
+  printf("Month: %d Day: %d is weekend: %d | hour: %d, min: %d, sec: %d\n",
+         qt->month, qt->day, qt->weekend, qt->hour, qt->min, qt->sec);
+}
+
+void set_minute_pixels(word_map *m, qlock_time qt) {
+  printf("set minute pixels");
+  bool setstate = qt.sec % 2;
+
+  word *word1 = word_map_getp(m, W_10);
+
+  word_print(word1);
+  word_setstate(word1, setstate);
+}
+
+void update_pixel_state(word_map *pm, qlock_time qt) {
+  printf("update pixel state");
+  set_minute_pixels(pm, qt);
+}
+
+void sweep_changes(word_map *m) {
+  for (int wi = 0; wi < m->size; wi++) {
+    word *w = &(m->values[wi]);
+    for (int pi = 0; pi < w->size; pi++) {
+      pixel *p = &(w->pixels[pi]);
+
+      if (p->change) {
+        printf("CHANGE %d to %d\n", p->led_id, p->state);
+        p->change = false;
+      }
+    }
+  }
+}
 
 int main(int argc, char **argv) {
   enum ROTATION rot;
@@ -19,11 +81,28 @@ int main(int argc, char **argv) {
   printf("Start application with parameters: \n");
   printf("   rotation: %d\n", rot);
 
+  ledgrid g = grid_init();
+  grid_print(&g);
+
   word_map map = word_map_init();
   words_init(&map);
 
-  ledgrid g = grid_init();
-  grid_print(&g);
+  for (int i = 0; i < map.size; i++) {
+    grid_word_lookup(&g, &map.values[i]);
+  }
+
+  for (int i = 0; i < map.size; i++) {
+    grid_rotate_word(&g, &map.values[i], rot);
+  }
+
+  while (1) {
+    sleep(1);
+    printf("tick tack ...\n");
+    qlock_time qt = get_time();
+    qlocktime_print(&qt);
+    update_pixel_state(&map, qt);
+    sweep_changes(&map);
+  }
 }
 
 void words_init(word_map *map) {
@@ -74,8 +153,20 @@ void word_print(word *w) {
   printf("]\n");
 }
 
+void word_setstate(word *w, bool state) {
+  for (int i = 0; i < w->size; i++) {
+    w->pixels[i].state = state;
+    w->pixels[i].change = true;
+  }
+}
+
 ledgrid grid_init() {
   ledgrid g = {0};
+  for (int j = 0; j < GRID_SIZE; j++) {
+    for (int i = 0; i < GRID_SIZE; i++) {
+      g.arr[j][i] = -1;
+    }
+  }
 
   // Corner pixels
   g.arr[0][0] = 0;
@@ -107,7 +198,9 @@ void grid_print(const ledgrid *g) {
   for (int j = 0; j < GRID_SIZE; j++) {
     for (int i = 0; i < GRID_SIZE; i++) {
       int num = g->arr[j][i];
-      if (num < 10) {
+      if (num < 0) {
+        printf(" %d ", g->arr[j][i]);
+      } else if (num < 10) {
         printf("  %d ", g->arr[j][i]);
       } else if (num < 100) {
         printf(" %d ", g->arr[j][i]);
@@ -215,15 +308,19 @@ bool word_map_add(word_map *m, enum WORD_DEFS key, const word w) {
   return true;
 }
 
-int word_map_get(word_map *m, enum WORD_DEFS key, word *w) {
-  int retKey = -1;
-
-  for (int i = 0; i < NUM_WORDS; i++) {
+int word_map_get(word_map *m, enum WORD_DEFS key, word **out) {
+  for (int i = 0; i < m->size; i++) {
     if (key == m->keys[i]) {
-      retKey = i;
-      *w = m->values[i];
-      return retKey;
+      *out = &m->values[i];
+      return i;
     }
   }
-  return retKey;
+  *out = NULL;
+  return -1;
+}
+
+word *word_map_getp(word_map *m, enum WORD_DEFS key) {
+  word *w;
+  word_map_get(m, key, &w);
+  return w;
 }
