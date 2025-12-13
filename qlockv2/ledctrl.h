@@ -4,6 +4,9 @@
 #define NUM_PIXELS_TOTAL 148 // 12 * 12 + 4
 #define GRID_SIZE 14
 #define MAX_WORD_LENGTH 10
+#define NUM_WORDS 6
+
+typedef unsigned int uint;
 
 enum ROTATION {
   ROT_0 = 0,
@@ -12,33 +15,48 @@ enum ROTATION {
   ROT_270 = 3,
 };
 
-typedef unsigned int uint;
+enum WORD_DEFS {
+  W_INVALID = -1,
+  W_IT_IS = 0,
+  W_5 = 1,
+  W_10 = 2,
+  W_20 = 3,
+  W_3_OVER_4 = 4,
+  W_1_OVER_4 = 5,
+};
 
 typedef struct {
-  uint id;
+  uint led_id;
   bool state;
+  int row_ind;
+  int col_ind;
 } pixel;
 
 typedef struct {
   uint size;
-  uint ids[GRID_SIZE];
+  pixel pixels[MAX_WORD_LENGTH];
 } word;
+
+typedef struct {
+  int size;
+  enum WORD_DEFS keys[NUM_WORDS];
+  word values[NUM_WORDS];
+} word_map;
 
 typedef struct {
   int arr[GRID_SIZE][GRID_SIZE];
 } ledgrid;
 
-typedef struct {
-  int i;
-  int j;
-} pixel_ind;
-
-typedef struct {
-  pixel_ind inds[MAX_WORD_LENGTH];
-  uint size;
-} pixel_lookup;
+void words_init(word_map *map);
+int word_initp(word *w, uint size, const int *ids);
+word word_init(uint size, const int *ids);
+void word_print(word *w);
 
 ledgrid grid_init();
 void grid_print(const ledgrid *g);
-int grid_word_lookup(const ledgrid *g, word *w, pixel_lookup *lu);
+int grid_word_lookup(const ledgrid *g, word *w);
 bool grid_rotate_word(const ledgrid *g, word *w, enum ROTATION rot);
+
+word_map word_map_init();
+bool word_map_add(word_map *m, enum WORD_DEFS key, const word w);
+int word_map_get(word_map *m, enum WORD_DEFS key, word *w);

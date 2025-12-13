@@ -16,16 +16,62 @@ int main(int argc, char **argv) {
       return -1;
     }
   }
-  printf("Rotation: %d\n", rot);
+  printf("Start application with parameters: \n");
+  printf("   rotation: %d\n", rot);
 
-  // 1) init words to match ids to a given word
-  word w1 = {.size = 3, .ids = {13, 14, 15}};
+  word_map map = word_map_init();
+  words_init(&map);
 
-  // 2) based on rotation, assign the mapped pixel id
   ledgrid g = grid_init();
   grid_print(&g);
-  // make rotation
-  grid_rotate_word(&g, &w1, rot);
+}
+
+void words_init(word_map *map) {
+  word_map_add(map, W_5, word_init(3, (int[]){13, 14, 15}));
+  word_map_add(map, W_10, word_init(4, (int[]){40, 41, 42, 43}));
+}
+
+word word_init(uint size, const int *ids) {
+  if (size > MAX_WORD_LENGTH) {
+    return (word){0};
+  }
+  word w;
+  int i;
+  for (i = 0; i < size; i++) {
+    pixel p = {0};
+    p.led_id = ids[i];
+    p.row_ind = -1;
+    p.col_ind = -1;
+    w.pixels[i] = p;
+  }
+  w.size = i;
+  return w;
+}
+
+int word_initp(word *w, uint size, const int *ids) {
+  // Initializes the word with the ids, sets indices to -1 since
+  // they have not been found yet (in the grid)
+  if (size > MAX_WORD_LENGTH) {
+    return -1;
+  }
+  int i;
+  for (i = 0; i < size; i++) {
+    pixel p = {0};
+    p.col_ind = -1;
+    p.row_ind = -1;
+    p.led_id = ids[i];
+    w->pixels[i] = p;
+  }
+  w->size = i;
+  return w->size;
+}
+
+void word_print(word *w) {
+  printf("Word ids: [");
+  for (int i = 0; i < w->size; i++) {
+    printf(" %d", w->pixels[i].led_id);
+  }
+  printf("]\n");
 }
 
 ledgrid grid_init() {
@@ -74,47 +120,42 @@ void grid_print(const ledgrid *g) {
 }
 
 bool grid_rotate_word(const ledgrid *g, word *w, enum ROTATION rot) {
-  pixel_lookup lookup = {0};
-  int pixels_found = grid_word_lookup(g, w, &lookup);
-  if (pixels_found != w->size) {
-    printf("Err: Did not found all pixels!\n");
-    return false;
-  }
-  printf("Found all pixels.\n--- Starting rotation\n");
+  // Based on the roated row/col indices, change the led_ids of the
+  // corresponding word's pixels.
+  for (int pind = 0; pind < w->size; pind++) {
+    pixel *pp = &w->pixels[pind];
+    if ((*pp).row_ind < 0 || (*pp).col_ind < 0) {
+      return false;
+    }
 
-  for (int pi = 0; pi < lookup.size; pi++) {
-    pixel_ind ind = lookup.inds[pi];
-    /* printf("ind: i=%d, j=%d\n", ind.i, ind.j); */
-
-    /* w->ids[0] = 123; */
-
-    uint pid_rot;
+    int pid_rot = -1;
 
     switch (rot) {
     case ROT_0:
       return true;
     case ROT_90:
       // i=SIZE - j | j=i
-      pid_rot = g->arr[ind.i][GRID_SIZE - 1 - ind.j];
-      printf("New rotated ind: %d \n", pid_rot);
+      pid_rot = g->arr[(*pp).row_ind][GRID_SIZE - 1 - (*pp).col_ind];
       break;
     case ROT_180:
       // i=SIZE-1 | j=SIZE-j
-      pid_rot = g->arr[GRID_SIZE - 1 - ind.j][GRID_SIZE - 1 - ind.i];
-      printf("New rotated ind: %d \n", pid_rot);
+      pid_rot =
+          g->arr[GRID_SIZE - 1 - (*pp).col_ind][GRID_SIZE - 1 - (*pp).row_ind];
       break;
     case ROT_270:
       // i=j | j=SIZE-i
-      pid_rot = g->arr[GRID_SIZE - 1 - ind.i][ind.j];
-      printf("New rotated ind: %d \n", pid_rot);
+      pid_rot = g->arr[GRID_SIZE - 1 - (*pp).row_ind][(*pp).col_ind];
       break;
     }
-  }
 
+    (*pp).led_id = pid_rot;
+  }
   return true;
 }
 
-int grid_word_lookup(const ledgrid *g, word *w, pixel_lookup *lu) {
+int grid_word_lookup(const ledgrid *g, word *w) {
+  // Iterates over the grid to find the indices of eaech word pixel
+  // The resulting indices (row, column) are then stored in word struct.
 
   int word_ind = 0;
 
@@ -124,20 +165,18 @@ int grid_word_lookup(const ledgrid *g, word *w, pixel_lookup *lu) {
   int done = 0;
 
   while (word_ind < w->size) {
+    uint pixel_id = w->pixels[word_ind].led_id;
     for (int j = 0; j < GRID_SIZE && !done; j++) {
       for (int i = 0; i < GRID_SIZE; i++) {
 
-        int pixel_id = g->arr[j][i];
-        if (pixel_id == w->ids[word_ind]) {
+        int candidate_id = g->arr[j][i];
+        if (candidate_id == pixel_id) {
           // Found i,j indices for pixel id
           fj = j;
           fi = i;
-          printf("Found pixel id: %d at (i=%d / j=%d)\n", w->ids[word_ind], fi,
-                 fj);
-
-          pixel_ind pind = {.i = fi, .j = fj};
-          lu->inds[word_ind] = pind;
-          lu->size++;
+          printf("Found pixel id: %d at (i=%d / j=%d)\n", candidate_id, fi, fj);
+          w->pixels[word_ind].row_ind = fi;
+          w->pixels[word_ind].col_ind = fj;
           done = 1;
           break;
         }
@@ -151,5 +190,40 @@ int grid_word_lookup(const ledgrid *g, word *w, pixel_lookup *lu) {
   if (fi == -1) {
     return -1;
   }
-  return lu->size;
+  return word_ind;
+}
+
+word_map word_map_init() {
+  word_map m = {0};
+  for (int i = 0; i < NUM_WORDS; i++) {
+    m.keys[i] = W_INVALID;
+  }
+  return m;
+}
+
+bool word_map_add(word_map *m, enum WORD_DEFS key, const word w) {
+  // check key does not exist
+  for (int i = 0; i < NUM_WORDS; i++) {
+    if (key == m->keys[i]) {
+      printf("Key %d already exists!\n", key);
+      return false;
+    }
+  }
+  m->keys[m->size] = key;
+  m->values[m->size] = w;
+  m->size++;
+  return true;
+}
+
+int word_map_get(word_map *m, enum WORD_DEFS key, word *w) {
+  int retKey = -1;
+
+  for (int i = 0; i < NUM_WORDS; i++) {
+    if (key == m->keys[i]) {
+      retKey = i;
+      *w = m->values[i];
+      return retKey;
+    }
+  }
+  return retKey;
 }
