@@ -1,0 +1,50 @@
+.program ws2812
+.side_set 1
+
+; Repeatedly gets one word of data from TX FIFO, stalling when empty.
+; Writes the least significant bit to the OUT pin group
+
+.define public T1 3
+.define public T2 3
+.define public T3 4
+
+; WS2812 timings (in PIO cycles):
+; T1 = high time for bit=1
+; T2 = low time after high
+; T3 = low time for bit=0 tail
+; Total = T1 + T2 + T3 = 10 cycles -> choose clock so that 10 cycles = 1.25us
+
+.wrap_target
+bitloop:
+  out x, 1 side 0 [T3 - 1] ; Side-set still takes place when instruction stalls
+  jmp !x do_zero side 1 [T1 - 1] ; Branch on the bit we shifted out. Positive pulse
+do_one:
+  jmp bitloop side 1 [T2 - 1] ; Continue driving high, for a long pulse
+do_zero:
+  nop side 0 [T2 - 1] ; Or drive low, for a short pulse
+.wrap
+
+% c-sdk {
+// this is a raw helper function for use by the user 
+// which sets up the GPIO output, and configures the SM to output on a particular pin
+
+void ws2812_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   pio_sm_config c = ws2812_program_get_default_config(offset);
+
+   // Map the state machine's OUT pin group to one pin, namely the `pin`
+   // parameter to this function.
+   sm_config_set_out_pins(&c, pin, 1);
+
+   // Set pin's GPIO function 
+   pio_gpio_init(pio, pin);
+
+   // set pin direction to output at the PIO
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+
+   // load config and jump to start of program
+   pio_sm_init(pio, sm, offset, &c);
+
+   // start state machine
+   pio_sm_set_enabled(pio, sm, true);
+}
+%}
