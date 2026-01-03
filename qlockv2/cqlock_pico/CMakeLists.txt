@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(cqlock_pico cqlock_pico.c )
+add_executable(cqlock_pico cqlock_pico.c tcpserver.c)
 
 pico_set_program_name(cqlock_pico "cqlock_pico")
 pico_set_program_version(cqlock_pico "0.1")

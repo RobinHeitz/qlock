@@ -28,39 +28,39 @@ set(PICO_BOARD pico2_w CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(test-pico2w C CXX ASM)
+project(cpp-qlock-pico C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(test-pico2w test-pico2w.cpp)
+add_executable(cpp-qlock-pico main.cpp ledcontroller.cpp)
 
-pico_set_program_name(test-pico2w "test-pico2w")
-pico_set_program_version(test-pico2w "0.1")
+pico_set_program_name(cpp-qlock-pico "cpp-qlock-pico")
+pico_set_program_version(cpp-qlock-pico "0.1")
 
 # Generate PIO header
-pico_generate_pio_header(test-pico2w ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+pico_generate_pio_header(cpp-qlock-pico ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(test-pico2w 0)
-pico_enable_stdio_usb(test-pico2w 0)
+pico_enable_stdio_uart(cpp-qlock-pico 0)
+pico_enable_stdio_usb(cpp-qlock-pico 0)
 
 # Add the standard library to the build
-target_link_libraries(test-pico2w
+target_link_libraries(cpp-qlock-pico
         pico_stdlib)
 
 # Add the standard include files to the build
-target_include_directories(test-pico2w PRIVATE
+target_include_directories(cpp-qlock-pico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
 # Add any user requested libraries
-target_link_libraries(test-pico2w 
+target_link_libraries(cpp-qlock-pico
         hardware_pio
         
         )
 
-pico_add_extra_outputs(test-pico2w)
+pico_add_extra_outputs(cpp-qlock-pico)
 

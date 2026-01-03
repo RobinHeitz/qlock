@@ -3,13 +3,13 @@
 #include "pico/stdlib.h"
 #include <cyw43_ll.h>
 #include <hardware/gpio.h>
-#include <lwip/def.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <lwip/pbuf.h>
-#include <lwip/tcp.h>
 
 #include "dhcpserver.h"
+#include "tcpserver.h"
 
 #define DEBUG_printf printf;
 
@@ -19,37 +19,6 @@
 #define PIN_GREEN 0
 #define PIN_YELLOW 1
 #define PIN_RED 2
-
-#define TCP_PORT 80
-#define POLL_TIME_S 5
-#define HTTP_GET "GET"
-#define HTTP_RESPONSE_HEADERS                                                  \
-  "HTTP/1.1 %d OK\nContent-Length: %d\nContent-Type: text/html; "              \
-  "charset=utf-8\nConnection: close\n\n"
-#define LED_TEST_BODY                                                          \
-  "<html><body><h1>Hello from Pico.</h1><p>Led is %s</p><p><a "                \
-  "href=\"?led=%d\">Turn led %s</a></body></html>"
-#define LED_PARAM "led=%d"
-#define LED_TEST "/ledtest"
-#define LED_GPIO 0
-#define HTTP_RESPONSE_REDIRECT                                                 \
-  "HTTP/1.1 302 Redirect\nLocation: http://%s" LED_TEST "\n\n"
-
-typedef struct TCP_SERVER_T_ {
-  struct tcp_pcb *server_pcb;
-  bool complete;
-  ip_addr_t gw;
-} TCP_SERVER_T;
-
-typedef struct TCP_CONNECT_STATE_T_ {
-  struct tcp_pcb *pcb;
-  int sent_len;
-  char headers[128];
-  char result[256];
-  int header_len;
-  int result_len;
-  ip_addr_t *gw;
-} TCP_CONNECT_STATE_T;
 
 int main() {
   stdio_init_all();
@@ -77,14 +46,13 @@ int main() {
     return -1;
   }
 
-  gpio_put(PIN_YELLOW, 1);
+  /* gpio_put(PIN_YELLOW, 1); */
 
   // Enable wifi station
   cyw43_arch_enable_sta_mode();
-
   cyw43_arch_enable_ap_mode(SSID, WIFI_PW, CYW43_AUTH_WPA2_AES_PSK);
   sleep_ms(1000);
-  gpio_put(PIN_YELLOW, 1);
+  /* gpio_put(PIN_YELLOW, 1); */
 
   ip4_addr_t mask;
   state->gw.addr = PP_HTONL(CYW43_DEFAULT_IP_AP_ADDRESS);
@@ -98,10 +66,10 @@ int main() {
   dns_server_t dns_server;
   dns_server_init(&dns_server, &state->gw);
 
-  if (!tcp_server_open(state, ap_name)) {
-    DEBUG_printf("failed to open server\n");
-    return 1;
-  }
+  /* if (!tcp_server_open(state, ap_name)) { */
+  /*   DEBUG_printf("failed to open server\n"); */
+  /*   return 1; */
+  /* } */
 
   while (true) {
 
