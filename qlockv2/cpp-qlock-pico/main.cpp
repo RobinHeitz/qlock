@@ -29,28 +29,21 @@ int main() {
   // config site
   // QlockConfig conf = read_config_from_memory();
 
+  QlockConfig config{
+      .brightness = 123,
+      .rot = Rotation::r0,
+  };
+
+  QlockController ctrl(config);
+
   // Setup words and data structures needed for the program
 
   ///////////////////////////////
   /// Actually start the loop ///
   ///////////////////////////////
 
-  bool on = false;
-
   while (getchar_timeout_us(0) == PICO_ERROR_TIMEOUT) {
-    uint32_t data;
-
-    if (on) {
-      // data = urgb_u32(0x00, 0x00, 0xFF);
-
-    } else {
-      // data = urgb_u32(0x0, 0x0, 0x0);
-    }
-
-    for (int i = 0; i < 9; i++) {
-      // put_pixel(pio, sm, data);
-    }
-    on = !on;
+    ctrl.qlock();
     sleep_ms(1000);
   }
 

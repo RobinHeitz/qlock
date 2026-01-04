@@ -1,11 +1,15 @@
 #ifndef LED_CONTROLLER_HPP
 #define LED_CONTROLLER_HPP
 
-// #include "hardware/pio.h"
-// #include "pico/stdlib.h"
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <span>
+
+#ifndef TESTING_PURPOSE
+#include "hardware/pio.h"
+#include "pico/stdlib.h"
+#endif // !TESTING_PURPOSE
 
 constexpr uint8_t DATA_LED_PIN = 0;
 constexpr uint32_t WS2812_FREQ_HZ = 800000; // 1.25us per cycle
@@ -89,8 +93,8 @@ public:
 private:
   std::array<WordDef, WORD_COUNT> words;
   uint8_t cur_min = -1;
-  std::array<uint32_t, 4> data_mins;
-  std::array<uint32_t, GRID_SIZE * GRID_SIZE> data_words;
+  std::array<uint32_t, 4> data_mins = {};
+  std::array<uint32_t, GRID_SIZE * GRID_SIZE> data_words = {};
 
   void init_word_defs();
   std::array<uint8_t, GRID_SIZE * GRID_SIZE>

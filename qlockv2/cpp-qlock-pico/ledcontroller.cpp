@@ -26,6 +26,7 @@ static uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 QlockController::QlockController(const QlockConfig &config) {
+  cur_min = -1;
   init_word_defs();
   auto indices = rotated_pixel_indices(config.rot);
   apply_rotation(indices);
@@ -152,17 +153,14 @@ QlockController::rotated_pixel_indices(Rotation rot) {
 void QlockController::set_minute_pixels(uint8_t min) {
   uint8_t mins_to_set = min % 5;
   switch (mins_to_set) {
-  case 1:
-    data_mins[0] = urgb_u32(123, 123, 123);
-    break;
-  case 2:
-    data_mins[1] = urgb_u32(222, 222, 222);
-    break;
-  case 3:
-    data_mins[2] = urgb_u32(101, 101, 101);
-    break;
   case 4:
-    data_mins[3] = urgb_u32(0xff, 0xff, 0xff);
+    data_mins[3] = urgb_u32(60, 61, 62);
+  case 3:
+    data_mins[2] = urgb_u32(50, 51, 52);
+  case 2:
+    data_mins[1] = urgb_u32(200, 201, 202);
+  case 1:
+    data_mins[0] = urgb_u32(100, 101, 102);
     break;
   default:
     for (auto &b : data_mins) {
@@ -214,20 +212,3 @@ QlockTime QlockController::get_time() {
 }
 
 void QlockController::write_to_pixels() {}
-
-int main(int argc, char **argv) {
-  // QlockConfig config = {.rot = Rotation::r90};
-  // QlockConfig config = {.rot = Rotation::r180};
-  QlockConfig config = {.rot = Rotation::r270};
-  QlockController ctrl(config);
-
-  printf("Starting loop...\n");
-
-  std::chrono::milliseconds t(500);
-
-  while (true) {
-    ctrl.qlock();
-    std::this_thread::sleep_for(t);
-    printf(".\n");
-  }
-}
