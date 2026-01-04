@@ -50,12 +50,14 @@ void QlockController::init_word_defs() {
   words[Words::TWO] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
   words[Words::THREE] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
   words[Words::FOUR] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
-  words[Words::FIVE] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
+  words[Words::FIVE_1] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
+  words[Words::FIVE_2] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
   words[Words::SIX] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
   words[Words::SEVEN] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
   words[Words::EIGHT] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
   words[Words::NINE] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
-  words[Words::TEN] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
+  words[Words::TEN_1] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
+  words[Words::TEN_2] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
   words[Words::ELEVEN] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
   words[Words::TWELVE] = WordDef{.length = 5, .pixels = {0, 1, 2, 3}};
 }
@@ -150,6 +152,118 @@ QlockController::rotated_pixel_indices(Rotation rot) {
   return flattened;
 }
 
+void QlockController::set_clock_hour_words(uint8_t hour, uint8_t mins) {
+  // just setting hour words. If min >= 25, go to next hour
+  // 'Es ist 5 vor halb 6' =/= hour:5
+
+  uint8_t hour12;
+  if (mins >= 25) {
+    hour12 = (hour + 1) % 12;
+  } else {
+    hour12 = hour % 12;
+  }
+
+  switch (hour12) {
+  case 0:
+    set_word_color(Words::TWELVE, 0xff, 0xff, 0xff);
+    break;
+  case 1:
+    if (mins < 5) {
+      set_word_color(Words::ONE_O_CLOCK, 0xff, 0xff, 0xff);
+    } else {
+      set_word_color(Words::ONE, 0xff, 0xff, 0xff);
+    }
+    break;
+  case 2:
+    set_word_color(Words::TWO, 0xff, 0xff, 0xff);
+    break;
+  case 3:
+    set_word_color(Words::THREE, 0xff, 0xff, 0xff);
+    break;
+  case 4:
+    set_word_color(Words::FOUR, 0xff, 0xff, 0xff);
+    break;
+  case 5:
+    set_word_color(Words::FIVE_2, 0xff, 0xff, 0xff);
+    break;
+  case 6:
+    set_word_color(Words::SIX, 0xff, 0xff, 0xff);
+    break;
+  case 7:
+    set_word_color(Words::SEVEN, 0xff, 0xff, 0xff);
+    break;
+  case 8:
+    set_word_color(Words::EIGHT, 0xff, 0xff, 0xff);
+    break;
+  case 9:
+    set_word_color(Words::NINE, 0xff, 0xff, 0xff);
+    break;
+  case 10:
+    set_word_color(Words::TEN_1, 0xff, 0xff, 0xff);
+    break;
+  case 11:
+    set_word_color(Words::ELEVEN, 0xff, 0xff, 0xff);
+    break;
+  }
+}
+
+void QlockController::set_clock_words(uint8_t hour, uint8_t mins) {
+
+  if ((mins >= 5) && (mins < 25)) {
+    // 5..10..15..20 NACH 1/2/3
+    uint8_t min_div = mins / 5;
+    switch (min_div) {
+    default:
+      set_word_color(Words::AFTER, 0xff, 0xff, 0xff);
+    case 1: // 5 (min) NACH
+      set_word_color(Words::FIVE_1, 0xff, 0xff, 0xff);
+      break;
+    case 2: // 10 (min) NACH
+      set_word_color(Words::TEN_1, 0xff, 0xff, 0xff);
+      break;
+    case 3: // 15 (min) NACH
+      set_word_color(Words::QUARTER, 0xff, 0xff, 0xff);
+      break;
+    case 4: // 20 (min) NACH
+      set_word_color(Words::TWENTY, 0xff, 0xff, 0xff);
+      break;
+    }
+  } else if ((mins >= 25) && (mins < 30)) {
+    // 5 VOR halb 6
+    set_word_color(Words::FIVE_1, 0xff, 0xff, 0xff);
+    set_word_color(Words::BEFORE, 0xff, 0xff, 0xff);
+    set_word_color(Words::HALF, 0xff, 0xff, 0xff);
+  } else if ((mins >= 30) && (mins < 35)) {
+    // HALB 7
+    set_word_color(Words::HALF, 0xff, 0xff, 0xff);
+
+  } else if ((mins >= 35) && (mins < 40)) {
+    // 5 NACH HALB 7
+    set_word_color(Words::FIVE_1, 0xff, 0xff, 0xff);
+    set_word_color(Words::AFTER, 0xff, 0xff, 0xff);
+    set_word_color(Words::HALF, 0xff, 0xff, 0xff);
+  } else if (mins >= 40) {
+    // 20 VOR 8 || 15 VOR 8 || 10 VOR 8 || 5 VOR 8
+    uint8_t mins_div = mins / 5;
+    switch (mins_div) {
+    default:
+      set_word_color(Words::BEFORE, 0xff, 0xff, 0xff);
+    case 8: // [40-45)
+      set_word_color(Words::TWENTY, 0xff, 0xff, 0xff);
+      break;
+    case 9: // [45-50)
+      set_word_color(Words::QUARTER, 0xff, 0xff, 0xff);
+      break;
+    case 10: // [50-55)
+      set_word_color(Words::TEN_1, 0xff, 0xff, 0xff);
+      break;
+    case 11: // [55-60)
+      set_word_color(Words::FIVE_1, 0xff, 0xff, 0xff);
+      break;
+    }
+  }
+}
+
 void QlockController::set_minute_pixels(uint8_t min) {
   uint8_t mins_to_set = min % 5;
   switch (mins_to_set) {
@@ -176,22 +290,35 @@ void QlockController::set_minute_pixels(uint8_t min) {
   }
 }
 
+void QlockController::set_word_color(uint8_t wordId, uint8_t r, uint8_t g,
+                                     uint8_t b) {
+  WordDef word = words[wordId];
+  for (int i = 0; i < word.length; i++) {
+    auto pixel_id = word.pixels[i];
+    data_words[pixel_id] = urgb_u32(r, g, b);
+  }
+}
+
 void QlockController::qlock() {
   // gather time
   QlockTime time = this->get_time();
+  printf("%d:%d:%d", time.hour, time.min, time.sec);
+
   if (time.min == cur_min) {
     return;
   }
-
+  // update data_mins
   std::cout << "minutes changed, set new pixels now." << std::endl;
-
   cur_min = time.min;
-  this->set_minute_pixels(cur_min);
+  set_minute_pixels(cur_min);
 
-  // make changes to array
-
-  // write array content to pio
-  this->write_to_pixels();
+  // clear all words data
+  for (auto &b : data_words) {
+    b = 0;
+  }
+  set_word_color(Words::IT_IS, 0xff, 0xff, 0xff);
+  set_clock_words(time.hour, time.min);
+  set_clock_hour_words(time.hour, time.min);
 }
 
 QlockTime QlockController::get_time() {
@@ -211,4 +338,9 @@ QlockTime QlockController::get_time() {
   return qt;
 }
 
-void QlockController::write_to_pixels() {}
+std::span<const uint32_t> QlockController::buffer_mins() const {
+  return data_mins;
+}
+std::span<const uint32_t> QlockController::buffer_words() const {
+  return data_words;
+}

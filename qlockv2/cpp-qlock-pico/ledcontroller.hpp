@@ -11,11 +11,10 @@
 #include "pico/stdlib.h"
 #endif // !TESTING_PURPOSE
 
-constexpr uint8_t DATA_LED_PIN = 0;
 constexpr uint32_t WS2812_FREQ_HZ = 800000; // 1.25us per cycle
 
 constexpr uint8_t GRID_SIZE = 12; // Grid of pixels (exc. minute dots)
-constexpr uint8_t WORD_COUNT = 23;
+constexpr uint8_t WORD_COUNT = 26;
 constexpr uint8_t MAX_WORD_LENGTH = 10;
 
 namespace Words {
@@ -35,14 +34,17 @@ constexpr size_t ONE_O_CLOCK = 11;
 constexpr size_t TWO = 12;
 constexpr size_t THREE = 13;
 constexpr size_t FOUR = 14;
-constexpr size_t FIVE = 15;
+constexpr size_t FIVE_1 = 15;
 constexpr size_t SIX = 16;
 constexpr size_t SEVEN = 17;
 constexpr size_t EIGHT = 18;
 constexpr size_t NINE = 19;
-constexpr size_t TEN = 20;
+constexpr size_t TEN_1 = 20;
 constexpr size_t ELEVEN = 21;
 constexpr size_t TWELVE = 22;
+constexpr size_t CLOCK = 23;
+constexpr size_t FIVE_2 = 24;
+constexpr size_t TEN_2 = 20;
 
 } // namespace Words
 
@@ -89,6 +91,8 @@ public:
 
   // Frequenty called method
   void qlock();
+  std::span<const uint32_t> buffer_mins() const;
+  std::span<const uint32_t> buffer_words() const;
 
 private:
   std::array<WordDef, WORD_COUNT> words;
@@ -100,6 +104,7 @@ private:
   std::array<uint8_t, GRID_SIZE * GRID_SIZE>
   rotated_pixel_indices(Rotation rot);
   void apply_rotation(std::span<uint8_t, GRID_SIZE * GRID_SIZE> indices);
+  void set_word_color(uint8_t wordId, uint8_t r, uint8_t g, uint8_t b);
 
   inline void print_grid(uint8_t ids[GRID_SIZE][GRID_SIZE]) {
     // Printing stuff
@@ -118,8 +123,9 @@ private:
     }
   }
 
-  void write_to_pixels();
-  void set_minute_pixels(uint8_t);
+  void set_minute_pixels(uint8_t min);
+  void set_clock_words(uint8_t hour, uint8_t mins);
+  void set_clock_hour_words(uint8_t hour, uint8_t mins);
   QlockTime get_time();
 };
 
