@@ -11,9 +11,13 @@
 
 #include "led.pio.h"
 
-#define WS2812_PIN 1
-#define NUM_LEDS 81
-#define NUM_COLS 8
+#define WS2812_FREQ 800 * 1000
+
+#define WS2812_WORD_PIN 1
+#define NUM_LEDS 9 * 1
+#define NUM_COLORS 8
+
+#define WS2812_MIN_PIN 0 // GPIO 0 for the 4 minute indicating pixels
 
 // i2c to communicate with DS3231 RTC
 #define DS3231_ADDR 0x68
@@ -32,17 +36,21 @@ typedef struct qlock {
   uint8_t day;   // which day in week 1-7
   uint8_t date;  // 1-31
   uint8_t month; // 1-12
-  uint8_t year;  // 0-99
-  // settings
-  bool is24h_format;
+  uint16_t year; // 0-65535
 } qlock;
 
-static inline void ws2812_program_init(PIO pio, uint sm, uint offset, uint pin,
-                                       float freq) {
-  pio_gpio_init(pio, pin);
-  pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+typedef struct pio_conf {
+  PIO pio;
+  uint sm;
+  uint offset;
+} pio_conf;
 
-  pio_sm_config c = ws2812_program_get_default_config(offset);
+static inline void ws2812_program_init(pio_conf *pio_conf, uint pin,
+                                       float freq) {
+  pio_gpio_init(pio_conf->pio, pin);
+  pio_sm_set_consecutive_pindirs(pio_conf->pio, pio_conf->sm, pin, 1, true);
+
+  pio_sm_config c = ws2812_program_get_default_config(pio_conf->offset);
   sm_config_set_sideset_pins(&c, pin);
   sm_config_set_out_shift(&c, false, true,
                           24); // shift left, autopull at 24 bits
@@ -52,13 +60,13 @@ static inline void ws2812_program_init(PIO pio, uint sm, uint offset, uint pin,
   float div = clock_get_hz(clk_sys) / (freq * cycles_per_bit);
   sm_config_set_clkdiv(&c, div);
 
-  pio_sm_init(pio, sm, offset, &c);
-  pio_sm_set_enabled(pio, sm, true);
+  pio_sm_init(pio_conf->pio, pio_conf->sm, pio_conf->offset, &c);
+  pio_sm_set_enabled(pio_conf->pio, pio_conf->sm, true);
 }
 
 // Send a single pixel (GRB format, shifted into upper 24 bits)
-static inline void put_pixel(PIO pio, uint sm, uint32_t grb) {
-  pio_sm_put_blocking(pio, sm, grb << 8u);
+static inline void put_pixel(pio_conf *pio_conf, uint32_t grb) {
+  pio_sm_put_blocking(pio_conf->pio, pio_conf->sm, grb << 8u);
 }
 
 // Convert RGB to the GRB format WS2812B expects
@@ -73,14 +81,14 @@ int64_t alarm_callback(alarm_id_t id, void *user_data) {
 
 // UART defines
 // By default the stdout UART is `uart0`, so we will use the second one
-#define UART_ID uart1
-#define BAUD_RATE 115200
+/* #define UART_ID uart1 */
+/* #define BAUD_RATE 115200 */
 
 // Use pins 4 and 5 for UART1
 // Pins can be changed, see the GPIO function select table in the datasheet for
 // information on GPIO assignments
-#define UART_TX_PIN 4
-#define UART_RX_PIN 5
+/* #define UART_TX_PIN 4 */
+/* #define UART_RX_PIN 5 */
 
 // I2C reserves some addresses for special purposes. We exclude these from the
 // scan. These are any addresses of the form 000 0xxx or 111 1xxx
@@ -109,18 +117,122 @@ void read_EEMPROM() {
   free(dst);
 }
 
-int set_clock_ds3231() {
-  uint8_t data[8];
-  data[0] = 0x00; // starting register addr
-  uint8_t setsec = 45;
-  data[1] = (setsec % 10) | ((setsec / 10) << 4);
-  uint8_t setmins = 59;
-  data[2] = (setmins / 10) << 4 | (setmins % 10);
-  data[3] = 0x3 | (1 << 5);
-  return i2c_write_blocking(i2c_default, DS3231_ADDR, data, 4, false);
+void qlock_print(const qlock *q) {
+  char *day = NULL;
+  switch (q->day) {
+  case 1:
+    day = "Mon";
+    break;
+  case 2:
+    day = "Tue";
+    break;
+  case 3:
+    day = "Wed";
+    break;
+  case 4:
+    day = "Thu";
+    break;
+  case 5:
+    day = "Fri";
+    break;
+  case 6:
+    day = "Sat";
+    break;
+  case 7:
+    day = "Sun";
+    break;
+  default:
+    day = "";
+    break;
+  }
+
+  char *month = NULL;
+  switch (q->month) {
+  case 1:
+    month = "Jan";
+    break;
+  case 2:
+    month = "Feb";
+    break;
+  case 3:
+    month = "Mar";
+    break;
+  case 4:
+    month = "Apr";
+    break;
+  case 5:
+    month = "May";
+    break;
+  case 6:
+    month = "Jun";
+    break;
+  case 7:
+    month = "Jul";
+    break;
+  case 8:
+    month = "Aug";
+    break;
+  case 9:
+    month = "Sep";
+    break;
+  case 10:
+    month = "Oct";
+    break;
+  case 11:
+    month = "Nov";
+    break;
+  case 12:
+    month = "Dec";
+    break;
+  default:
+    month = "";
+    break;
+  }
+
+  printf("-------------------------\n");
+  printf("%.*s, %u. %.*s   %02u:%02u:%02u\n", 3, day, q->date, 3, month,
+         q->hours, q->mins, q->secs);
 }
 
-int read_qlock(qlock *out) {
+int qlock_set_ds3231(const qlock *q) {
+  uint8_t data[8];
+  data[0] = 0x00; // starting register addr
+  data[1] = (q->secs % 10) | ((q->secs / 10) << 4);
+  data[2] = (q->mins / 10) << 4 | (q->mins % 10);
+  data[3] = (q->hours / 10) << 4 | (q->hours % 10);
+
+  // set bit 6 to 0 for 24h format selection
+  data[3] = data[3] & ((1 << 6) ^ 0xff);
+
+  data[4] = q->day;
+  data[5] = (q->date % 10) | ((q->date / 10) << 4);
+  data[6] = (q->month % 10) | ((q->month / 10) << 4);
+
+  uint8_t y = q->year % 100;
+  data[7] = (y % 10) | ((y / 10) << 4);
+  return i2c_write_blocking(i2c_default, DS3231_ADDR, data, 8, false);
+}
+
+void pio_setup(pio_conf *pio_mins, pio_conf *pio_words) {
+  // PIO for commanding the words
+  pio_words->pio = pio0;
+  pio_words->sm = 0;
+  pio_words->offset = pio_add_program(pio_words->pio, &ws2812_program);
+
+  pio_mins->pio = pio1;
+  pio_mins->sm = 0;
+  pio_mins->offset = pio_add_program(pio_mins->pio, &ws2812_program);
+
+  // PIO for commanding the 4 minute pixels
+  /* PIO pio_min = pio1; */
+  /* uint sm_min = 0; */
+  /* uint offset_min = pio_add_program(pio_min, &ws2812_program); */
+
+  ws2812_program_init(pio_words, WS2812_WORD_PIN, WS2812_FREQ);
+  ws2812_program_init(pio_mins, WS2812_MIN_PIN, WS2812_FREQ);
+}
+
+int qlock_read(qlock *out) {
   if (ds3231_buf == NULL) {
     ds3231_buf = malloc(sizeof(uint8_t) * DS3231_BUF_LEN);
   }
@@ -129,80 +241,16 @@ int read_qlock(qlock *out) {
   int ret = i2c_read_blocking(i2c_default, DS3231_ADDR, ds3231_buf,
                               DS3231_BUF_LEN, false);
 
-  // parsing
-  uint8_t raw = ds3231_buf[0];
-  out->secs = (raw >> 4) * 10 + (raw & 0x0f);
-
-  raw = ds3231_buf[1];
-  out->mins = (raw >> 4) * 10 + (raw & 0x0f);
-
-  raw = ds3231_buf[2];
-  uint8_t is_ten = (raw >> 4) & 0x01;
-  uint8_t is_twenty = (raw >> 5) & 0x01;
-
-  out->hours =
-      raw & 0x0f; //+ 10 * ((raw >> 4) & 0x1) + 10 * ((raw >> 5) & 0x01);
-  switch (is_twenty - is_ten) {
-  case 0:
-    break;
-  case 1:
-    out->hours = out->hours + 20;
-    break;
-  case -1:
-    out->hours = out->hours + 10;
-    break;
-  }
-
-  bool is24h = (raw >> 6) & 0x01;
-  printf("HH:MM:SS = %u:%u:%u \n", out->hours, out->mins, out->secs);
-  printf("is 24h format: %b || isten: %b || is twenty: %b\n", is24h, is_ten,
-         is_twenty);
-
-  out->is24h_format = is24h;
-
+  out->secs = (ds3231_buf[0] >> 4) * 10 + (ds3231_buf[0] & 0x0f);
+  out->mins = (ds3231_buf[1] >> 4) * 10 + (ds3231_buf[1] & 0x0f);
+  out->hours = ((ds3231_buf[2] >> 4) & 0x3) * 10 + (ds3231_buf[2] & 0x0f);
+  out->day = ds3231_buf[3] & ((1 << 3) - 1);
+  out->date = (ds3231_buf[4] & 0xf) + 10 * (ds3231_buf[4] >> 4);
+  out->month = (ds3231_buf[5] & 0xf) + 10 * ((ds3231_buf[5] >> 4) & 0x1);
   return ret;
 }
 
-void read_DS3231() {
-  if (ds3231_buf == NULL) {
-    ds3231_buf = malloc(sizeof(uint8_t) * DS3231_BUF_LEN);
-  }
-
-  uint8_t reg = 0x00;
-  printf("start reading RTC registers: %d\n", reg);
-
-  i2c_write_blocking(i2c_default, DS3231_ADDR, &reg, 1, true);
-  int ret = i2c_read_blocking(i2c_default, DS3231_ADDR, ds3231_buf, 7, false);
-
-  if (ret <= 0) {
-    printf("could not read any data\n");
-    return;
-  }
-  printf("ret = %d\n", ret);
-  for (int i = 0; i < ret; i++) {
-    printf("  %d: %u\n", i, ds3231_buf[i]);
-  }
-
-  uint8_t raw = ds3231_buf[0];
-  uint8_t secs = (raw >> 4) * 10 + (raw & 0x0f);
-  /* uint8_t secs_right = (raw & 0x0f) + (raw >> 4) * 10; */
-
-  raw = ds3231_buf[1];
-  uint8_t mins = (raw >> 4) * 10 + (raw & 0x0f);
-
-  /* raw = ds3231_buf[1]; */
-  /* uint8_t mins = (raw >> 4) * 10 + (raw & 0x0f); */
-  /* uint8_t mins = (raw >> 4) * 10 + (raw & 0x0f); */
-
-  /* uint8_t mins = (ds3231_buf[1] & (mask3 << 1)) * 10 + (ds3231_buf[1] >> 4);
-   */
-  printf("MM:SS === %u:%u\n", mins, secs);
-}
-
-int main() {
-  stdio_init_all();
-
-  sleep_ms(2000);
+void i2c_setup() {
   printf("setting up i2c\n");
 
   // init i2c
@@ -211,9 +259,10 @@ int main() {
   gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
   gpio_pull_up(SDA_PIN);
   gpio_pull_up(SCL_PIN);
+}
 
-  sleep_ms(2000);
-
+void i2c_scan() {
+  printf("---------\n");
   printf("Start scanning i2c device...\n");
   for (int addr = 0; addr < (1 << 7); ++addr) {
     if (addr % 16 == 0) {
@@ -235,27 +284,50 @@ int main() {
     printf(ret < 0 ? "." : "@");
     printf(addr % 16 == 15 ? "\n" : "  ");
   }
-  printf("Done.\n");
+  printf("\n");
+  printf("Finished scanning i2c\n");
+  printf("---------\n");
+}
 
+int main() {
+  stdio_init_all();
+
+  pio_conf pio_mins = {0};
+  pio_conf pio_words = {0};
+
+  pio_setup(&pio_mins, &pio_words);
+
+  i2c_setup();
+  sleep_ms(2000);
+  i2c_scan();
+  sleep_ms(2000);
+
+  // Setting qlock
+  /* qlock qlock = {.secs = 40, */
+  /*                .mins = 32, */
+  /*                .hours = 13, */
+  /*                .day = 6, */
+  /*                .date = 28, */
+  /*                .month = 2, */
+  /*                .year = 2026}; */
+  /**/
+  /* qlock_print(&qlock); */
+  /* qlock_set_ds3231(&qlock); */
+
+  qlock out_qlock = {0};
+
+  /* printf("Set qlock: %d\n", set_clock_ds3231()); */
   sleep_ms(1000);
-  printf("Set qlock: %d\n", set_clock_ds3231());
-  sleep_ms(1000);
 
-  qlock qlock = {0};
-
-  printf("-------\n");
-  read_EEMPROM();
-  printf("-------\n");
+  /* printf("-------\n"); */
+  /* read_EEMPROM(); */
+  /* printf("-------\n"); */
 
   // Initialise the Wi-Fi chip
   if (cyw43_arch_init()) {
     printf("Wi-Fi init failed\n");
     return -1;
   }
-
-  PIO pio = pio0;
-  uint sm = 0;
-  uint offset = pio_add_program(pio, &ws2812_program);
 
   // Timer example code - This example fires off the callback after 2000ms
   /* add_alarm_in_ms(2000, alarm_callback, NULL, false); */
@@ -296,8 +368,6 @@ int main() {
   // For more examples of UART use see
   // https://github.com/raspberrypi/pico-examples/tree/master/uart
 
-  ws2812_program_init(pio, sm, offset, WS2812_PIN, 800000); // 800kHz
-
   uint8_t index = 0;
 
   uint32_t colors[] = {
@@ -328,17 +398,18 @@ int main() {
 
     for (int i = 0; i < NUM_LEDS; i++) {
       if (i == index) {
-        put_pixel(pio, sm, colors[i % NUM_COLS]);
+        put_pixel(&pio_mins, colors[i % NUM_COLORS]);
+        put_pixel(&pio_words, colors[i % NUM_COLORS]);
       } else {
-        put_pixel(pio, sm, ledoff);
+        put_pixel(&pio_mins, ledoff);
+        put_pixel(&pio_words, ledoff);
       }
     }
     index = (index + 1) % NUM_LEDS;
 
-    printf("-------\n");
     /* read_DS3231(); */
-    read_qlock(&qlock);
-    printf("-------\n");
+    qlock_read(&out_qlock);
+    qlock_print(&out_qlock);
     sleep_ms(1000);
   }
 }
