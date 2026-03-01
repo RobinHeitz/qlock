@@ -5,6 +5,7 @@
 #include "hardware/uart.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
+#include <assert.h>
 #include <hardware/gpio.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,8 @@
 #define WS2812_FREQ 800 * 1000
 
 #define WS2812_WORD_PIN 1
-#define NUM_LEDS 9 * 1
+#define WORD_GRID_LEN 3
+#define NUM_WORD_LEDS 9
 #define NUM_COLORS 8
 
 #define WS2812_MIN_PIN 0 // GPIO 0 for the 4 minute indicating pixels
@@ -27,9 +29,29 @@
 
 #define DS3231_BUF_LEN 7
 
-uint8_t *ds3231_buf = NULL;
+#define URGB_U32(r, g, b)                                                      \
+  (((uint32_t)(g) << 16) | ((uint32_t)(r) << 8) | (uint32_t)(b))
 
-typedef struct qlock {
+typedef enum QlockState {
+  QS_SETUP,
+  QS_INIT,
+  QS_TICK,
+} QlockState;
+
+typedef enum rotation {
+  rot0 = 0,
+  rot90 = 1,
+  rot180 = 2,
+  rot270 = 3,
+} rotation;
+
+typedef struct leds {
+  uint8_t ids[NUM_WORD_LEDS];
+  uint32_t colors[NUM_WORD_LEDS];
+  rotation rot;
+} qlock_leds;
+
+typedef struct qlock_time {
   uint8_t secs;
   uint8_t mins;
   uint8_t hours;
@@ -37,13 +59,81 @@ typedef struct qlock {
   uint8_t date;  // 1-31
   uint8_t month; // 1-12
   uint16_t year; // 0-65535
-} qlock;
+} qlock_time;
 
 typedef struct pio_conf {
   PIO pio;
   uint sm;
   uint offset;
 } pio_conf;
+
+typedef enum colors {
+  COLOR_OFF = 0,
+
+  COLOR_RED = URGB_U32(255, 0, 0),
+  COLOR_GREEN = URGB_U32(0, 0, 255),
+  COLOR_BLUE = URGB_U32(0, 255, 0),
+
+  COLOR_YELLOW = URGB_U32(255, 255, 0),
+  COLOR_CYAN = URGB_U32(0, 255, 255),
+  COLOR_MAGENTA = URGB_U32(255, 0, 255),
+
+  COLOR_ORGANGE = URGB_U32(255, 128, 0),
+
+  COLOR_WHITE = URGB_U32(255, 255, 255),
+} colors;
+
+///////////////////////////////////////
+/////////// Global Vars ///////////////
+///////////////////////////////////////
+
+uint8_t *ds3231_buf = NULL;
+QlockState qlockState = QS_INIT;
+
+///////////////////////////////////////
+///////////////////////////////////////
+///////////////////////////////////////
+
+// Send a single pixel (GRB format, shifted into upper 24 bits)
+static inline void put_pixel(const pio_conf *pio_conf, uint32_t grb) {
+  pio_sm_put_blocking(pio_conf->pio, pio_conf->sm, grb << 8u);
+}
+
+// Establish a top-left origin, meaning that
+// later on, words etc. can be defined by rows, columns
+// reason: Easy to rotate such a thing
+void qlock_leds_init(qlock_leds *l, rotation rot) {
+  printf("led_map_init rot=%u\n", rot);
+  l->rot = rot;
+  // First pixel matrix pcb
+  l->ids[0] = 0;
+  l->ids[1] = 1;
+  l->ids[2] = 2;
+  l->ids[3] = 5;
+  l->ids[4] = 4;
+  l->ids[5] = 3;
+  l->ids[6] = 6;
+  l->ids[7] = 7;
+  l->ids[8] = 8;
+}
+
+void qlock_leds_reset_colors(qlock_leds *leds) {
+  for (int i = 0; i < NUM_WORD_LEDS; i++) {
+    leds->colors[i] = 0;
+  }
+}
+
+void qlock_leds_set_color(qlock_leds *leds, uint8_t index, uint32_t color) {
+  uint8_t pixel_number = leds->ids[index];
+  leds->colors[pixel_number] = color;
+}
+
+void qlock_leds_sweep_words(const qlock_leds *leds, pio_conf *pio) {
+  for (int i = 0; i < NUM_WORD_LEDS; i++) {
+    uint8_t pixel_number = leds->ids[i];
+    put_pixel(pio, leds->colors[pixel_number]);
+  }
+}
 
 static inline void ws2812_program_init(pio_conf *pio_conf, uint pin,
                                        float freq) {
@@ -62,11 +152,6 @@ static inline void ws2812_program_init(pio_conf *pio_conf, uint pin,
 
   pio_sm_init(pio_conf->pio, pio_conf->sm, pio_conf->offset, &c);
   pio_sm_set_enabled(pio_conf->pio, pio_conf->sm, true);
-}
-
-// Send a single pixel (GRB format, shifted into upper 24 bits)
-static inline void put_pixel(pio_conf *pio_conf, uint32_t grb) {
-  pio_sm_put_blocking(pio_conf->pio, pio_conf->sm, grb << 8u);
 }
 
 // Convert RGB to the GRB format WS2812B expects
@@ -117,7 +202,7 @@ void read_EEMPROM() {
   free(dst);
 }
 
-void qlock_print(const qlock *q) {
+void qlock_print(const qlock_time *q) {
   char *day = NULL;
   switch (q->day) {
   case 1:
@@ -194,7 +279,7 @@ void qlock_print(const qlock *q) {
          q->hours, q->mins, q->secs);
 }
 
-int qlock_set_ds3231(const qlock *q) {
+int qlock_set_ds3231(const qlock_time *q) {
   uint8_t data[8];
   data[0] = 0x00; // starting register addr
   data[1] = (q->secs % 10) | ((q->secs / 10) << 4);
@@ -232,7 +317,7 @@ void pio_setup(pio_conf *pio_mins, pio_conf *pio_words) {
   ws2812_program_init(pio_mins, WS2812_MIN_PIN, WS2812_FREQ);
 }
 
-int qlock_read(qlock *out) {
+int qlock_read(qlock_time *out) {
   if (ds3231_buf == NULL) {
     ds3231_buf = malloc(sizeof(uint8_t) * DS3231_BUF_LEN);
   }
@@ -289,8 +374,80 @@ void i2c_scan() {
   printf("---------\n");
 }
 
+void pixel_render_spinning(qlock_leds *leds) {
+  const int extent_len = 2 * WORD_GRID_LEN + 2 * (WORD_GRID_LEN - 2); // 8
+  const int divider = WORD_GRID_LEN - 1;                              // 2
+  static int counter = 0;
+
+  int segment_id = counter / divider;
+  int seg_count = counter % divider;
+
+  int led_id = -1;
+
+  switch (segment_id) {
+  case 0: // horizontal
+    led_id = seg_count;
+    break;
+  case 1: // vertical
+    led_id = seg_count * WORD_GRID_LEN + divider;
+    break;
+  case 2: // horizontal backwards
+    led_id = WORD_GRID_LEN * WORD_GRID_LEN - 1 - seg_count;
+    break;
+  case 3: // vertical backwards
+    led_id = (WORD_GRID_LEN - 1 - seg_count) * WORD_GRID_LEN;
+    break;
+  }
+  for (int i = 0; i < NUM_WORD_LEDS; i++) {
+    uint8_t pixel_number = leds->ids[i];
+    if (i == led_id) {
+      qlock_leds_set_color(leds, pixel_number, COLOR_CYAN);
+    } else {
+      qlock_leds_set_color(leds, pixel_number, COLOR_OFF);
+    }
+  }
+  counter = (counter + 1) % extent_len;
+}
+
+void pixel_render_serial(qlock_leds *leds) {
+  static int counter = 0;
+
+  for (int i = 0; i < NUM_WORD_LEDS; i++) {
+    uint8_t pixel_number = leds->ids[i];
+    /* qlock_leds_set_color(leds, pixel_number, col); */
+    if (i == counter) {
+      qlock_leds_set_color(leds, pixel_number, COLOR_RED);
+    } else {
+      qlock_leds_set_color(leds, pixel_number, COLOR_OFF);
+    }
+  }
+  counter = (counter + 1) % NUM_WORD_LEDS;
+}
+
+void set_minute_pixels(const qlock_time *q, const pio_conf *pio) {
+  uint32_t col = urgb_u32(25, 0, 25);
+  uint8_t mins = q->mins % 5;
+  uint32_t min_buf[4] = {0};
+  switch (mins) {
+  case 4:
+    min_buf[3] = col;
+  case 3:
+    min_buf[2] = col;
+  case 2:
+    min_buf[1] = col;
+  case 1:
+    min_buf[0] = col;
+    break;
+  }
+  for (int i = 0; i < 4; i++) {
+    put_pixel(pio, min_buf[i]);
+  }
+}
+
 int main() {
   stdio_init_all();
+
+  QlockState qs = QS_SETUP;
 
   pio_conf pio_mins = {0};
   pio_conf pio_words = {0};
@@ -299,24 +456,11 @@ int main() {
 
   i2c_setup();
   sleep_ms(2000);
-  i2c_scan();
-  sleep_ms(2000);
 
-  // Setting qlock
-  /* qlock qlock = {.secs = 40, */
-  /*                .mins = 32, */
-  /*                .hours = 13, */
-  /*                .day = 6, */
-  /*                .date = 28, */
-  /*                .month = 2, */
-  /*                .year = 2026}; */
-  /**/
-  /* qlock_print(&qlock); */
-  /* qlock_set_ds3231(&qlock); */
+  /* i2c_scan(); */
+  /* sleep_ms(2000); */
 
-  qlock out_qlock = {0};
-
-  /* printf("Set qlock: %d\n", set_clock_ds3231()); */
+  qlock_time out_qlock = {0};
   sleep_ms(1000);
 
   /* printf("-------\n"); */
@@ -368,48 +512,52 @@ int main() {
   // For more examples of UART use see
   // https://github.com/raspberrypi/pico-examples/tree/master/uart
 
-  uint8_t index = 0;
+  qlock_leds *leds = malloc(sizeof(qlock_leds));
+  qlock_leds_init(leds, rot0);
+  qlock_leds_reset_colors(leds);
 
-  uint32_t colors[] = {
-      urgb_u32(25, 0, 0),  // red
-      urgb_u32(0, 25, 0),  // green
-      urgb_u32(0, 0, 25),  // blue
-      urgb_u32(25, 25, 0), // yellow
-      urgb_u32(0, 25, 25), // cyan
-      urgb_u32(25, 0, 25), // magenta
-      urgb_u32(25, 12, 0), // orange
-      urgb_u32(25, 25, 25) // white
-  };
-
+  /* uint8_t counter = 0; */
+  /**/
   /* uint32_t colors[] = { */
-  /*     urgb_u32(255, 0, 0),    // red */
-  /*     urgb_u32(0, 255, 0),    // green */
-  /*     urgb_u32(0, 0, 255),    // blue */
-  /*     urgb_u32(255, 255, 0),  // yellow */
-  /*     urgb_u32(0, 255, 255),  // cyan */
-  /*     urgb_u32(255, 0, 255),  // magenta */
-  /*     urgb_u32(255, 128, 0),  // orange */
-  /*     urgb_u32(255, 255, 255) // white */
+  /*     urgb_u32(25, 0, 0),  // red */
+  /*     urgb_u32(0, 25, 0),  // green */
+  /*     urgb_u32(0, 0, 25),  // blue */
+  /*     urgb_u32(25, 25, 0), // yellow */
+  /*     urgb_u32(0, 25, 25), // cyan */
+  /*     urgb_u32(25, 0, 25), // magenta */
+  /*     urgb_u32(25, 12, 0), // orange */
+  /*     urgb_u32(25, 25, 25) // white */
   /* }; */
-
-  uint32_t ledoff = 0;
+  /**/
+  /* uint32_t ledoff = 0; */
+  /* uint32_t col = urgb_u32(5, 0, 5); */
 
   while (true) {
 
-    for (int i = 0; i < NUM_LEDS; i++) {
-      if (i == index) {
-        put_pixel(&pio_mins, colors[i % NUM_COLORS]);
-        put_pixel(&pio_words, colors[i % NUM_COLORS]);
-      } else {
-        put_pixel(&pio_mins, ledoff);
-        put_pixel(&pio_words, ledoff);
-      }
-    }
-    index = (index + 1) % NUM_LEDS;
+    qlock_leds_reset_colors(leds);
+
+    /* pixel_render_serial(leds); */
+    pixel_render_spinning(leds);
+
+    /* counter = (counter + 1) % NUM_WORD_LEDS; */
+    qlock_leds_sweep_words(leds, &pio_words);
+
+    // sweep through buffer
+
+    /* for (int i = 0; i < NUM_WORD_LEDS; i++) { */
+    /*   if (i == index) { */
+    /*     put_pixel(&pio_words, colors[i % NUM_COLORS]); */
+    /*   } else { */
+    /*     put_pixel(&pio_words, ledoff); */
+    /*   } */
+    /* } */
 
     /* read_DS3231(); */
     qlock_read(&out_qlock);
     qlock_print(&out_qlock);
+
+    set_minute_pixels(&out_qlock, &pio_mins);
+
     sleep_ms(1000);
   }
 }
