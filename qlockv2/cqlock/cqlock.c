@@ -16,8 +16,7 @@
 
 #define WS2812_WORD_PIN 1
 #define WORD_GRID_LEN 3
-#define NUM_WORD_LEDS 9
-#define NUM_COLORS 8
+#define NUM_WORD_LEDS WORD_GRID_LEN *WORD_GRID_LEN
 
 #define WS2812_MIN_PIN 0 // GPIO 0 for the 4 minute indicating pixels
 
@@ -154,9 +153,23 @@ static inline void ws2812_program_init(pio_conf *pio_conf, uint pin,
   pio_sm_set_enabled(pio_conf->pio, pio_conf->sm, true);
 }
 
-// Convert RGB to the GRB format WS2812B expects
-static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
-  return ((uint32_t)g << 16) | ((uint32_t)r << 8) | (uint32_t)b;
+void pio_setup(pio_conf *pio_mins, pio_conf *pio_words) {
+  // PIO for commanding the words
+  pio_words->pio = pio0;
+  pio_words->sm = 0;
+  pio_words->offset = pio_add_program(pio_words->pio, &ws2812_program);
+
+  pio_mins->pio = pio1;
+  pio_mins->sm = 0;
+  pio_mins->offset = pio_add_program(pio_mins->pio, &ws2812_program);
+
+  // PIO for commanding the 4 minute pixels
+  /* PIO pio_min = pio1; */
+  /* uint sm_min = 0; */
+  /* uint offset_min = pio_add_program(pio_min, &ws2812_program); */
+
+  ws2812_program_init(pio_words, WS2812_WORD_PIN, WS2812_FREQ);
+  ws2812_program_init(pio_mins, WS2812_MIN_PIN, WS2812_FREQ);
 }
 
 int64_t alarm_callback(alarm_id_t id, void *user_data) {
@@ -279,8 +292,8 @@ void qlock_print(const qlock_time *q) {
          q->hours, q->mins, q->secs);
 }
 
-int qlock_set_ds3231(const qlock_time *q) {
-  uint8_t data[8];
+int qlock_write_ds3231(const qlock_time *q) {
+  uint8_t data[1 + DS3231_BUF_LEN];
   data[0] = 0x00; // starting register addr
   data[1] = (q->secs % 10) | ((q->secs / 10) << 4);
   data[2] = (q->mins / 10) << 4 | (q->mins % 10);
@@ -298,26 +311,7 @@ int qlock_set_ds3231(const qlock_time *q) {
   return i2c_write_blocking(i2c_default, DS3231_ADDR, data, 8, false);
 }
 
-void pio_setup(pio_conf *pio_mins, pio_conf *pio_words) {
-  // PIO for commanding the words
-  pio_words->pio = pio0;
-  pio_words->sm = 0;
-  pio_words->offset = pio_add_program(pio_words->pio, &ws2812_program);
-
-  pio_mins->pio = pio1;
-  pio_mins->sm = 0;
-  pio_mins->offset = pio_add_program(pio_mins->pio, &ws2812_program);
-
-  // PIO for commanding the 4 minute pixels
-  /* PIO pio_min = pio1; */
-  /* uint sm_min = 0; */
-  /* uint offset_min = pio_add_program(pio_min, &ws2812_program); */
-
-  ws2812_program_init(pio_words, WS2812_WORD_PIN, WS2812_FREQ);
-  ws2812_program_init(pio_mins, WS2812_MIN_PIN, WS2812_FREQ);
-}
-
-int qlock_read(qlock_time *out) {
+int qlock_read_ds3231(qlock_time *out) {
   if (ds3231_buf == NULL) {
     ds3231_buf = malloc(sizeof(uint8_t) * DS3231_BUF_LEN);
   }
@@ -374,7 +368,7 @@ void i2c_scan() {
   printf("---------\n");
 }
 
-void pixel_render_spinning(qlock_leds *leds) {
+void pixel_render_spinning_clockwise(qlock_leds *leds) {
   const int extent_len = 2 * WORD_GRID_LEN + 2 * (WORD_GRID_LEN - 2); // 8
   const int divider = WORD_GRID_LEN - 1;                              // 2
   static int counter = 0;
@@ -425,18 +419,17 @@ void pixel_render_serial(qlock_leds *leds) {
 }
 
 void set_minute_pixels(const qlock_time *q, const pio_conf *pio) {
-  uint32_t col = urgb_u32(25, 0, 25);
   uint8_t mins = q->mins % 5;
   uint32_t min_buf[4] = {0};
   switch (mins) {
   case 4:
-    min_buf[3] = col;
+    min_buf[3] = COLOR_BLUE;
   case 3:
-    min_buf[2] = col;
+    min_buf[2] = COLOR_BLUE;
   case 2:
-    min_buf[1] = col;
+    min_buf[1] = COLOR_BLUE;
   case 1:
-    min_buf[0] = col;
+    min_buf[0] = COLOR_BLUE;
     break;
   }
   for (int i = 0; i < 4; i++) {
@@ -533,27 +526,14 @@ int main() {
   /* uint32_t col = urgb_u32(5, 0, 5); */
 
   while (true) {
-
     qlock_leds_reset_colors(leds);
 
-    /* pixel_render_serial(leds); */
-    pixel_render_spinning(leds);
+    pixel_render_spinning_clockwise(leds);
 
-    /* counter = (counter + 1) % NUM_WORD_LEDS; */
     qlock_leds_sweep_words(leds, &pio_words);
 
-    // sweep through buffer
-
-    /* for (int i = 0; i < NUM_WORD_LEDS; i++) { */
-    /*   if (i == index) { */
-    /*     put_pixel(&pio_words, colors[i % NUM_COLORS]); */
-    /*   } else { */
-    /*     put_pixel(&pio_words, ledoff); */
-    /*   } */
-    /* } */
-
     /* read_DS3231(); */
-    qlock_read(&out_qlock);
+    qlock_read_ds3231(&out_qlock);
     qlock_print(&out_qlock);
 
     set_minute_pixels(&out_qlock, &pio_mins);
