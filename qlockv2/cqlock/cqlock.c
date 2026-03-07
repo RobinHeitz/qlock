@@ -137,6 +137,77 @@ void qlock_leds_init_pcb_cell(qlock_leds *l, int pcb_row, int pcb_col) {
   }
 }
 
+void qlock_leds_init_pcb_row_manual(qlock_leds *l, int pcb_row) {
+  int pixof = pcb_row * 3 * NUM_LEDS_ON_PCB;
+
+  if (pcb_row % 2 == 0) {
+    // row 0 (within pcb)
+    l->ids[0 + pixof] = 0 + pixof;
+    l->ids[1 + pixof] = 1 + pixof;
+    l->ids[2 + pixof] = 2 + pixof;
+    l->ids[3 + pixof] = 0 + 9 + pixof;
+    l->ids[4 + pixof] = 1 + 9 + pixof;
+    l->ids[5 + pixof] = 2 + 9 + pixof;
+    l->ids[6 + pixof] = 0 + 9 + 9 + pixof;
+    l->ids[7 + pixof] = 1 + 9 + 9 + pixof;
+    l->ids[8 + pixof] = 2 + 9 + 9 + pixof;
+
+    // row 1 (within pcb)
+    l->ids[9 + pixof] = 5 + pixof;
+    l->ids[10 + pixof] = 4 + pixof;
+    l->ids[11 + pixof] = 3 + pixof;
+    l->ids[12 + pixof] = 5 + 9 + pixof;
+    l->ids[13 + pixof] = 4 + 9 + pixof;
+    l->ids[14 + pixof] = 3 + 9 + pixof;
+    l->ids[15 + pixof] = 5 + 9 + 9 + pixof;
+    l->ids[16 + pixof] = 4 + 9 + 9 + pixof;
+    l->ids[17 + pixof] = 3 + 9 + 9 + pixof;
+
+    // row 2 (within pcb)
+    l->ids[18 + pixof] = 6 + pixof;
+    l->ids[19 + pixof] = 7 + pixof;
+    l->ids[20 + pixof] = 8 + pixof;
+    l->ids[21 + pixof] = 6 + 9 + pixof;
+    l->ids[22 + pixof] = 7 + 9 + pixof;
+    l->ids[23 + pixof] = 8 + 9 + pixof;
+    l->ids[24 + pixof] = 6 + 9 + 9 + pixof;
+    l->ids[25 + pixof] = 7 + 9 + 9 + pixof;
+    l->ids[26 + pixof] = 8 + 9 + 9 + pixof;
+  } else {
+    // pcb_row is 1 or 3 ==> reverse direction
+    // row 0 (within pcb)
+    l->ids[0 + pixof] = 8 + 2 * 9 + pixof;
+    l->ids[1 + pixof] = 7 + 2 * 9 + pixof;
+    l->ids[2 + pixof] = 6 + 2 * 9 + pixof;
+    l->ids[3 + pixof] = 8 + 1 * 9 + pixof;
+    l->ids[4 + pixof] = 7 + 1 * 9 + pixof;
+    l->ids[5 + pixof] = 6 + 1 * 9 + pixof;
+    l->ids[6 + pixof] = 8 + 0 * 9 + pixof;
+    l->ids[7 + pixof] = 7 + 0 * 9 + pixof;
+    l->ids[8 + pixof] = 6 + 0 * 9 + pixof;
+    // row 1 (within pcb)
+    l->ids[9 + pixof] = 3 + 2 * 9 + pixof;
+    l->ids[10 + pixof] = 4 + 2 * 9 + pixof;
+    l->ids[11 + pixof] = 5 + 2 * 9 + pixof;
+    l->ids[12 + pixof] = 3 + 1 * 9 + pixof;
+    l->ids[13 + pixof] = 4 + 1 * 9 + pixof;
+    l->ids[14 + pixof] = 5 + 1 * 9 + pixof;
+    l->ids[15 + pixof] = 3 + 0 * 9 + pixof;
+    l->ids[16 + pixof] = 4 + 0 * 9 + pixof;
+    l->ids[17 + pixof] = 5 + 0 * 9 + pixof;
+    // row 2 (within pcb)
+    l->ids[18 + pixof] = 2 + 2 * 9 + pixof;
+    l->ids[19 + pixof] = 1 + 2 * 9 + pixof;
+    l->ids[20 + pixof] = 0 + 2 * 9 + pixof;
+    l->ids[21 + pixof] = 2 + 1 * 9 + pixof;
+    l->ids[22 + pixof] = 1 + 1 * 9 + pixof;
+    l->ids[23 + pixof] = 0 + 1 * 9 + pixof;
+    l->ids[24 + pixof] = 2 + 0 * 9 + pixof;
+    l->ids[25 + pixof] = 1 + 0 * 9 + pixof;
+    l->ids[26 + pixof] = 0 + 0 * 9 + pixof;
+  }
+}
+
 void qlock_leds_init_pcb_row(qlock_leds *l, int pcb_row) {
   // second row: ids increase 27
   int off = pcb_row * NUM_PCBS_IN_ROW * 3 * 3;
@@ -192,9 +263,12 @@ void qlock_leds_init(qlock_leds *l, rotation rot) {
   printf("led_map_init rot=%u\n", rot);
   l->rot = rot;
 
-  qlock_leds_init_pcb_row(l, 0);
-  qlock_leds_init_pcb_row(l, 1);
-  qlock_leds_init_pcb_row(l, 2);
+  qlock_leds_init_pcb_row_manual(l, 0);
+  qlock_leds_init_pcb_row_manual(l, 1);
+  qlock_leds_init_pcb_row_manual(l, 2);
+  /* qlock_leds_init_pcb_row(l, 0); */
+  /* qlock_leds_init_pcb_row(l, 1); */
+  /* qlock_leds_init_pcb_row(l, 2); */
 
   // First pixel matrix pcb
   /* l->ids[0] = 0; */
@@ -241,6 +315,8 @@ void qlock_leds_set_color(qlock_leds *leds, uint8_t index, uint32_t color) {
 
 void qlock_leds_sweep_words(const qlock_leds *leds, pio_conf *pio) {
   for (int i = 0; i < NUM_WORD_LEDS; i++) {
+    if (i == 27 * 3)
+      return;
     uint8_t pixel_number = leds->ids[i];
     printf("  put color on pixel_number=%d color=%d\n", pixel_number,
            leds->colors[pixel_number]);
