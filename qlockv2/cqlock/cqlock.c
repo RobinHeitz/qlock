@@ -99,39 +99,90 @@ static inline void put_pixel(const pio_conf *pio_conf, uint32_t grb) {
   pio_sm_put_blocking(pio_conf->pio, pio_conf->sm, grb << 8u);
 }
 
-void qlock_leds_init_pcb_row(qlock_leds *l, int pcb_row) {
-  // second row: ids increase 27
+void qlock_led_init_old(qlock_leds *l) {
+  l->ids[0] = 0;
+  l->ids[1] = 1;
+  l->ids[2] = 2;
+  l->ids[3] = 5;
+  l->ids[4] = 4;
+  l->ids[5] = 3;
+  l->ids[6] = 6;
+  l->ids[7] = 7;
+  l->ids[8] = 8;
+}
 
+void qlock_leds_init_pcb_cell(qlock_leds *l, int pcb_row, int pcb_col) {
   int off = pcb_row * NUM_PCBS_IN_ROW * 3 * 3;
 
-  l->ids[0 + off] = 0 + off;
-  l->ids[1 + off] = 1 + off;
-  l->ids[2 + off] = 2 + off;
-  l->ids[9 + off] = 5 + off;
-  l->ids[10 + off] = 4 + off;
-  l->ids[11 + off] = 3 + off;
-  l->ids[18 + off] = 6 + off;
-  l->ids[19 + off] = 7 + off;
-  l->ids[20 + off] = 8 + off;
+  for (int row = 0; row < 3; row++) {
+    bool rev = (row % 2) != 0;
+    /* l->ids[3 + off] = 0 + 1 * 9 + off; */
 
-  l->ids[3 + off] = 0 + 1 * 9 + off;
-  l->ids[4 + off] = 1 + 1 * 9 + off;
-  l->ids[5 + off] = 2 + 1 * 9 + off;
-  l->ids[12 + off] = 5 + 1 * 9 + off;
-  l->ids[13 + off] = 4 + 1 * 9 + off;
-  l->ids[14 + off] = 3 + 1 * 9 + off;
-  l->ids[21 + off] = 6 + 1 * 9 + off;
-  l->ids[22 + off] = 7 + 1 * 9 + off;
-  l->ids[23 + off] = 8 + 1 * 9 + off;
-  l->ids[6 + off] = 0 + 2 * 9 + off;
-  l->ids[7 + off] = 1 + 2 * 9 + off;
-  l->ids[8 + off] = 2 + 2 * 9 + off;
-  l->ids[15 + off] = 5 + 2 * 9 + off;
-  l->ids[16 + off] = 4 + 2 * 9 + off;
-  l->ids[17 + off] = 3 + 2 * 9 + off;
-  l->ids[24 + off] = 6 + 2 * 9 + off;
-  l->ids[25 + off] = 7 + 2 * 9 + off;
-  l->ids[26 + off] = 8 + 2 * 9 + off;
+    if (!rev) {
+      l->ids[3 * pcb_col + 0 + row * NUM_LEDS_ON_PCB + off] =
+          0 + 3 * row + pcb_col * 9 + off;
+      l->ids[3 * pcb_col + 1 + row * NUM_LEDS_ON_PCB + off] =
+          1 + 3 * row + pcb_col * 9 + off;
+      l->ids[3 * pcb_col + 2 + row * NUM_LEDS_ON_PCB + off] =
+          2 + 3 * row + pcb_col * 9 + off;
+    } else {
+
+      l->ids[3 * pcb_col + 0 + row * NUM_LEDS_ON_PCB + off] =
+          5 + pcb_col * 9 + off;
+      l->ids[3 * pcb_col + 1 + row * NUM_LEDS_ON_PCB + off] =
+          4 + pcb_col * 9 + off;
+      l->ids[3 * pcb_col + 2 + row * NUM_LEDS_ON_PCB + off] =
+          3 + pcb_col * 9 + off;
+    }
+  }
+}
+
+void qlock_leds_init_pcb_row(qlock_leds *l, int pcb_row) {
+  // second row: ids increase 27
+  int off = pcb_row * NUM_PCBS_IN_ROW * 3 * 3;
+
+  /* int pcbind = 0; */
+
+  qlock_leds_init_pcb_cell(l, pcb_row, 0);
+  qlock_leds_init_pcb_cell(l, pcb_row, 1);
+  qlock_leds_init_pcb_cell(l, pcb_row, 2);
+
+  // pcb 0
+  /* l->ids[0 + pcbind * NUM_LEDS_ON_PCB + off] = 0 + 0 * 9 + off; */
+  /* l->ids[1 + pcbind * NUM_LEDS_ON_PCB + off] = 1 + 0 * 9 + off; */
+  /* l->ids[2 + pcbind * NUM_LEDS_ON_PCB + off] = 2 + 0 * 9 + off; */
+  /**/
+  /* pcbind = 1; */
+  /* l->ids[0 + pcbind * NUM_LEDS_ON_PCB + off] = 5 + 0 * 9 + off; */
+  /* l->ids[1 + pcbind * NUM_LEDS_ON_PCB + off] = 4 + 0 * 9 + off; */
+  /* l->ids[2 + pcbind * NUM_LEDS_ON_PCB + off] = 3 + 0 * 9 + off; */
+  /**/
+  /* pcbind = 2; */
+  /* l->ids[0 + pcbind * NUM_LEDS_ON_PCB + off] = 6 + 0 * 9 + off; */
+  /* l->ids[1 + pcbind * NUM_LEDS_ON_PCB + off] = 7 + 0 * 9 + off; */
+  /* l->ids[2 + pcbind * NUM_LEDS_ON_PCB + off] = 8 + 0 * 9 + off; */
+  /**/
+  // pcb 1
+  /* l->ids[3 + off] = 0 + 1 * 9 + off; */
+  /* l->ids[4 + off] = 1 + 1 * 9 + off; */
+  /* l->ids[5 + off] = 2 + 1 * 9 + off; */
+  /* l->ids[12 + off] = 5 + 1 * 9 + off; */
+  /* l->ids[13 + off] = 4 + 1 * 9 + off; */
+  /* l->ids[14 + off] = 3 + 1 * 9 + off; */
+  /* l->ids[21 + off] = 6 + 1 * 9 + off; */
+  /* l->ids[22 + off] = 7 + 1 * 9 + off; */
+  /* l->ids[23 + off] = 8 + 1 * 9 + off; */
+  /**/
+  /* // pcb 2 */
+  /* l->ids[6 + off] = 0 + 2 * 9 + off; */
+  /* l->ids[7 + off] = 1 + 2 * 9 + off; */
+  /* l->ids[8 + off] = 2 + 2 * 9 + off; */
+  /* l->ids[15 + off] = 5 + 2 * 9 + off; */
+  /* l->ids[16 + off] = 4 + 2 * 9 + off; */
+  /* l->ids[17 + off] = 3 + 2 * 9 + off; */
+  /* l->ids[24 + off] = 6 + 2 * 9 + off; */
+  /* l->ids[25 + off] = 7 + 2 * 9 + off; */
+  /* l->ids[26 + off] = 8 + 2 * 9 + off; */
 }
 
 // Establish a top-left origin, meaning that
@@ -572,6 +623,7 @@ int main() {
 
   qlock_leds *leds = malloc(sizeof(qlock_leds));
   qlock_leds_init(leds, rot0);
+  /* qlock_led_init_old(leds); */
   qlock_leds_reset_colors(leds);
 
   /* uint8_t counter = 0; */
