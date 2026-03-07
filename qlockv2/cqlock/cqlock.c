@@ -13,20 +13,21 @@
 #include "led.pio.h"
 
 #define WS2812_FREQ 800 * 1000
-
-#define WS2812_WORD_PIN 1
-#define WORD_GRID_LEN 3
-#define NUM_WORD_LEDS WORD_GRID_LEN *WORD_GRID_LEN
-
 #define WS2812_MIN_PIN 0 // GPIO 0 for the 4 minute indicating pixels
+#define WS2812_WORD_PIN 1
+#define CONFIG_BUTTON_PIN 2
+
+#define NUM_PCBS_IN_ROW 3
+#define NUM_LEDS_ON_PCB 9
+#define WORD_GRID_LEN (NUM_PCBS_IN_ROW * 3)
+#define NUM_WORD_LEDS (WORD_GRID_LEN * WORD_GRID_LEN)
 
 // i2c to communicate with DS3231 RTC
+#define DS3231_BUF_LEN 7
 #define DS3231_ADDR 0x68
 #define EEPROM_ADDR 0x57
 #define SDA_PIN 16
 #define SCL_PIN 17
-
-#define DS3231_BUF_LEN 7
 
 #define URGB_U32(r, g, b)                                                      \
   (((uint32_t)(g) << 16) | ((uint32_t)(r) << 8) | (uint32_t)(b))
@@ -98,22 +99,82 @@ static inline void put_pixel(const pio_conf *pio_conf, uint32_t grb) {
   pio_sm_put_blocking(pio_conf->pio, pio_conf->sm, grb << 8u);
 }
 
+void qlock_leds_init_pcb_row(qlock_leds *l, int pcb_row) {
+  // second row: ids increase 27
+
+  int off = pcb_row * NUM_PCBS_IN_ROW * 3 * 3;
+
+  l->ids[0 + off] = 0 + off;
+  l->ids[1 + off] = 1 + off;
+  l->ids[2 + off] = 2 + off;
+  l->ids[9 + off] = 5 + off;
+  l->ids[10 + off] = 4 + off;
+  l->ids[11 + off] = 3 + off;
+  l->ids[18 + off] = 6 + off;
+  l->ids[19 + off] = 7 + off;
+  l->ids[20 + off] = 8 + off;
+
+  l->ids[3 + off] = 0 + 1 * 9 + off;
+  l->ids[4 + off] = 1 + 1 * 9 + off;
+  l->ids[5 + off] = 2 + 1 * 9 + off;
+  l->ids[12 + off] = 5 + 1 * 9 + off;
+  l->ids[13 + off] = 4 + 1 * 9 + off;
+  l->ids[14 + off] = 3 + 1 * 9 + off;
+  l->ids[21 + off] = 6 + 1 * 9 + off;
+  l->ids[22 + off] = 7 + 1 * 9 + off;
+  l->ids[23 + off] = 8 + 1 * 9 + off;
+  l->ids[6 + off] = 0 + 2 * 9 + off;
+  l->ids[7 + off] = 1 + 2 * 9 + off;
+  l->ids[8 + off] = 2 + 2 * 9 + off;
+  l->ids[15 + off] = 5 + 2 * 9 + off;
+  l->ids[16 + off] = 4 + 2 * 9 + off;
+  l->ids[17 + off] = 3 + 2 * 9 + off;
+  l->ids[24 + off] = 6 + 2 * 9 + off;
+  l->ids[25 + off] = 7 + 2 * 9 + off;
+  l->ids[26 + off] = 8 + 2 * 9 + off;
+}
+
 // Establish a top-left origin, meaning that
 // later on, words etc. can be defined by rows, columns
 // reason: Easy to rotate such a thing
 void qlock_leds_init(qlock_leds *l, rotation rot) {
   printf("led_map_init rot=%u\n", rot);
   l->rot = rot;
+
+  qlock_leds_init_pcb_row(l, 0);
+  qlock_leds_init_pcb_row(l, 1);
+  qlock_leds_init_pcb_row(l, 2);
+
   // First pixel matrix pcb
-  l->ids[0] = 0;
-  l->ids[1] = 1;
-  l->ids[2] = 2;
-  l->ids[3] = 5;
-  l->ids[4] = 4;
-  l->ids[5] = 3;
-  l->ids[6] = 6;
-  l->ids[7] = 7;
-  l->ids[8] = 8;
+  /* l->ids[0] = 0; */
+  /* l->ids[1] = 1; */
+  /* l->ids[2] = 2; */
+  /* l->ids[9] = 5; */
+  /* l->ids[10] = 4; */
+  /* l->ids[11] = 3; */
+  /* l->ids[18] = 6; */
+  /* l->ids[19] = 7; */
+  /* l->ids[20] = 8; */
+  /**/
+  /* l->ids[3] = 0 + 1 * 9; */
+  /* l->ids[4] = 1 + 1 * 9; */
+  /* l->ids[5] = 2 + 1 * 9; */
+  /* l->ids[12] = 5 + 1 * 9; */
+  /* l->ids[13] = 4 + 1 * 9; */
+  /* l->ids[14] = 3 + 1 * 9; */
+  /* l->ids[21] = 6 + 1 * 9; */
+  /* l->ids[22] = 7 + 1 * 9; */
+  /* l->ids[23] = 8 + 1 * 9; */
+  /**/
+  /* l->ids[6] = 0 + 2 * 9; */
+  /* l->ids[7] = 1 + 2 * 9; */
+  /* l->ids[8] = 2 + 2 * 9; */
+  /* l->ids[15] = 5 + 2 * 9; */
+  /* l->ids[16] = 4 + 2 * 9; */
+  /* l->ids[17] = 3 + 2 * 9; */
+  /* l->ids[24] = 6 + 2 * 9; */
+  /* l->ids[25] = 7 + 2 * 9; */
+  /* l->ids[26] = 8 + 2 * 9; */
 }
 
 void qlock_leds_reset_colors(qlock_leds *leds) {
@@ -130,6 +191,8 @@ void qlock_leds_set_color(qlock_leds *leds, uint8_t index, uint32_t color) {
 void qlock_leds_sweep_words(const qlock_leds *leds, pio_conf *pio) {
   for (int i = 0; i < NUM_WORD_LEDS; i++) {
     uint8_t pixel_number = leds->ids[i];
+    printf("  put color on pixel_number=%d color=%d\n", pixel_number,
+           leds->colors[pixel_number]);
     put_pixel(pio, leds->colors[pixel_number]);
   }
 }
@@ -162,11 +225,6 @@ void pio_setup(pio_conf *pio_mins, pio_conf *pio_words) {
   pio_mins->pio = pio1;
   pio_mins->sm = 0;
   pio_mins->offset = pio_add_program(pio_mins->pio, &ws2812_program);
-
-  // PIO for commanding the 4 minute pixels
-  /* PIO pio_min = pio1; */
-  /* uint sm_min = 0; */
-  /* uint offset_min = pio_add_program(pio_min, &ws2812_program); */
 
   ws2812_program_init(pio_words, WS2812_WORD_PIN, WS2812_FREQ);
   ws2812_program_init(pio_mins, WS2812_MIN_PIN, WS2812_FREQ);
@@ -392,6 +450,8 @@ void pixel_render_spinning_clockwise(qlock_leds *leds) {
     led_id = (WORD_GRID_LEN - 1 - seg_count) * WORD_GRID_LEN;
     break;
   }
+  /* printf("  led_id=%d | seg_count=%d | counter=%d\n", led_id, seg_count, */
+  /* counter); */
   for (int i = 0; i < NUM_WORD_LEDS; i++) {
     uint8_t pixel_number = leds->ids[i];
     if (i == led_id) {
@@ -411,6 +471,7 @@ void pixel_render_serial(qlock_leds *leds) {
     /* qlock_leds_set_color(leds, pixel_number, col); */
     if (i == counter) {
       qlock_leds_set_color(leds, pixel_number, COLOR_RED);
+      printf("  i=%d pixel_number=%d\n", i, pixel_number);
     } else {
       qlock_leds_set_color(leds, pixel_number, COLOR_OFF);
     }
@@ -439,6 +500,10 @@ void set_minute_pixels(const qlock_time *q, const pio_conf *pio) {
 
 int main() {
   stdio_init_all();
+
+  // Button setup
+  /* gpio_set_function(CONFIG_BUTTON_PIN, GPIO_FUNC_GPCK); */
+  /* gpio_pull_up(CONFIG_BUTTON_PIN); */
 
   QlockState qs = QS_SETUP;
 
@@ -528,16 +593,16 @@ int main() {
   while (true) {
     qlock_leds_reset_colors(leds);
 
-    pixel_render_spinning_clockwise(leds);
-
-    qlock_leds_sweep_words(leds, &pio_words);
+    /* pixel_render_spinning_clockwise(leds); */
+    pixel_render_serial(leds);
 
     /* read_DS3231(); */
     qlock_read_ds3231(&out_qlock);
     qlock_print(&out_qlock);
 
     set_minute_pixels(&out_qlock, &pio_mins);
+    qlock_leds_sweep_words(leds, &pio_words);
 
-    sleep_ms(1000);
+    sleep_ms(100);
   }
 }
