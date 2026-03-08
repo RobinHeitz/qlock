@@ -111,57 +111,95 @@ void qlock_led_init_old(qlock_leds *l) {
   l->ids[8] = 8;
 }
 
-void qlock_leds_init_pcb_cell(qlock_leds *l, int pcb_row, int pcb_col) {
-  int off = pcb_row * NUM_PCBS_IN_ROW * 3 * 3;
-
-  for (int row = 0; row < 3; row++) {
-    bool rev = (row % 2) != 0;
-    /* l->ids[3 + off] = 0 + 1 * 9 + off; */
-
-    if (!rev) {
-      l->ids[3 * pcb_col + 0 + row * NUM_LEDS_ON_PCB + off] =
-          0 + 3 * row + pcb_col * 9 + off;
-      l->ids[3 * pcb_col + 1 + row * NUM_LEDS_ON_PCB + off] =
-          1 + 3 * row + pcb_col * 9 + off;
-      l->ids[3 * pcb_col + 2 + row * NUM_LEDS_ON_PCB + off] =
-          2 + 3 * row + pcb_col * 9 + off;
-    } else {
-
-      l->ids[3 * pcb_col + 0 + row * NUM_LEDS_ON_PCB + off] =
-          5 + pcb_col * 9 + off;
-      l->ids[3 * pcb_col + 1 + row * NUM_LEDS_ON_PCB + off] =
-          4 + pcb_col * 9 + off;
-      l->ids[3 * pcb_col + 2 + row * NUM_LEDS_ON_PCB + off] =
-          3 + pcb_col * 9 + off;
-    }
+void qlock_leds_init_row_r2l(qlock_leds *l, int row) {
+  int pixeloffset = row * WORD_GRID_LEN;
+  int j = 0;
+  int k = 0;
+  for (int i = 0; i < WORD_GRID_LEN; i++) {
+    j = i % 3;
+    if (j == 2)
+      k++;
+    l->ids[i + pixeloffset] = 5 - j + k * 9 + pixeloffset;
   }
+  // row 1 (within pcb)
+  /* l->ids[9 + pixof] = 5 + pixof; */
+  /* l->ids[10 + pixof] = 4 + pixof; */
+  /* l->ids[11 + pixof] = 3 + pixof; */
+  /* l->ids[12 + pixof] = 5 + 9 + pixof; */
+  /* l->ids[13 + pixof] = 4 + 9 + pixof; */
+  /* l->ids[14 + pixof] = 3 + 9 + pixof; */
+  /* l->ids[15 + pixof] = 5 + 9 + 9 + pixof; */
+  /* l->ids[16 + pixof] = 4 + 9 + 9 + pixof; */
+  /* l->ids[17 + pixof] = 3 + 9 + 9 + pixof; */
+}
+void qlock_leds_init_row_l2r(qlock_leds *l, int row) {
+  int pixeloffset = row * WORD_GRID_LEN;
+  int j = 0;
+  int k = 0;
+  for (int i = 0; i < WORD_GRID_LEN; i++) {
+    j = i % 3;
+    if (j == 2)
+      k++;
+    l->ids[i + pixeloffset] = j + pixeloffset + k * NUM_LEDS_ON_PCB;
+  }
+
+  /* l->ids[0 + pixof] = 0 + pixof; */
+  /* l->ids[1 + pixof] = 1 + pixof; */
+  /* l->ids[2 + pixof] = 2 + pixof; */
+  /* l->ids[3 + pixof] = 0 + 9 + pixof; */
+  /* l->ids[4 + pixof] = 1 + 9 + pixof; */
+  /* l->ids[5 + pixof] = 2 + 9 + pixof; */
+  /* l->ids[6 + pixof] = 0 + 9 + 9 + pixof; */
+  /* l->ids[7 + pixof] = 1 + 9 + 9 + pixof; */
+  /* l->ids[8 + pixof] = 2 + 9 + 9 + pixof; */
 }
 
 void qlock_leds_init_pcb_row_manual(qlock_leds *l, int pcb_row) {
   int pixof = pcb_row * 3 * NUM_LEDS_ON_PCB;
-
   if (pcb_row % 2 == 0) {
+
+    /* if (pcb_row % 2 == 0) { */
+    /*   l->ids[21 + pixof] = 6 + 9 + pixof; */
+    /*   l->ids[22 + pixof] = 7 + 9 + pixof; */
+    /*   l->ids[23 + pixof] = 8 + 9 + pixof; */
+    /**/
+    /*   int k = 0; */
+    /*   for (int i = 0; i < 27; i++) { */
+    /*     bool rev_row = (i / (NUM_PCBS_IN_ROW * 3)) % 2; */
+    /*     int j = i % 3; */
+    /*     if (j == 2) { */
+    /*       k = (k + 1) % NUM_PCBS_IN_ROW; */
+    /*     } */
+    /* int k = (i / 3) % NUM_PCBS_IN_ROW; */
+    /*     if (!rev_row) { // every second row in pcb has reversed order */
+    /*       l->ids[i + pixof] = j + k * 9 + pixof; */
+    /*     } else { */
+    /*       l->ids[i + pixof] = 5 - j + k * 9 + pixof; */
+    /*     } */
+    /*   } */
+
+    /* int pixof = pcb_row * 3 * NUM_LEDS_ON_PCB; */
     // row 0 (within pcb)
-    l->ids[0 + pixof] = 0 + pixof;
-    l->ids[1 + pixof] = 1 + pixof;
-    l->ids[2 + pixof] = 2 + pixof;
-    l->ids[3 + pixof] = 0 + 9 + pixof;
-    l->ids[4 + pixof] = 1 + 9 + pixof;
-    l->ids[5 + pixof] = 2 + 9 + pixof;
-    l->ids[6 + pixof] = 0 + 9 + 9 + pixof;
-    l->ids[7 + pixof] = 1 + 9 + 9 + pixof;
-    l->ids[8 + pixof] = 2 + 9 + 9 + pixof;
+    /* l->ids[0 + pixof] = 0 + pixof; */
+    /* l->ids[1 + pixof] = 1 + pixof; */
+    /* l->ids[2 + pixof] = 2 + pixof; */
+    /* l->ids[3 + pixof] = 0 + 9 + pixof; */
+    /* l->ids[4 + pixof] = 1 + 9 + pixof; */
+    /* l->ids[5 + pixof] = 2 + 9 + pixof; */
+    /* l->ids[6 + pixof] = 0 + 9 + 9 + pixof; */
+    /* l->ids[7 + pixof] = 1 + 9 + 9 + pixof; */
+    /* l->ids[8 + pixof] = 2 + 9 + 9 + pixof; */
 
     // row 1 (within pcb)
-    l->ids[9 + pixof] = 5 + pixof;
-    l->ids[10 + pixof] = 4 + pixof;
-    l->ids[11 + pixof] = 3 + pixof;
-    l->ids[12 + pixof] = 5 + 9 + pixof;
-    l->ids[13 + pixof] = 4 + 9 + pixof;
-    l->ids[14 + pixof] = 3 + 9 + pixof;
-    l->ids[15 + pixof] = 5 + 9 + 9 + pixof;
-    l->ids[16 + pixof] = 4 + 9 + 9 + pixof;
-    l->ids[17 + pixof] = 3 + 9 + 9 + pixof;
+    /* l->ids[9 + pixof] = 5 + pixof; */
+    /* l->ids[10 + pixof] = 4 + pixof; */
+    /* l->ids[11 + pixof] = 3 + pixof; */
+    /* l->ids[12 + pixof] = 5 + 9 + pixof; */
+    /* l->ids[13 + pixof] = 4 + 9 + pixof; */
+    /* l->ids[14 + pixof] = 3 + 9 + pixof; */
+    /* l->ids[15 + pixof] = 5 + 9 + 9 + pixof; */
+    /* l->ids[16 + pixof] = 4 + 9 + 9 + pixof; */
+    /* l->ids[17 + pixof] = 3 + 9 + 9 + pixof; */
 
     // row 2 (within pcb)
     l->ids[18 + pixof] = 6 + pixof;
@@ -208,54 +246,6 @@ void qlock_leds_init_pcb_row_manual(qlock_leds *l, int pcb_row) {
   }
 }
 
-void qlock_leds_init_pcb_row(qlock_leds *l, int pcb_row) {
-  // second row: ids increase 27
-  int off = pcb_row * NUM_PCBS_IN_ROW * 3 * 3;
-
-  /* int pcbind = 0; */
-
-  qlock_leds_init_pcb_cell(l, pcb_row, 0);
-  qlock_leds_init_pcb_cell(l, pcb_row, 1);
-  qlock_leds_init_pcb_cell(l, pcb_row, 2);
-
-  // pcb 0
-  /* l->ids[0 + pcbind * NUM_LEDS_ON_PCB + off] = 0 + 0 * 9 + off; */
-  /* l->ids[1 + pcbind * NUM_LEDS_ON_PCB + off] = 1 + 0 * 9 + off; */
-  /* l->ids[2 + pcbind * NUM_LEDS_ON_PCB + off] = 2 + 0 * 9 + off; */
-  /**/
-  /* pcbind = 1; */
-  /* l->ids[0 + pcbind * NUM_LEDS_ON_PCB + off] = 5 + 0 * 9 + off; */
-  /* l->ids[1 + pcbind * NUM_LEDS_ON_PCB + off] = 4 + 0 * 9 + off; */
-  /* l->ids[2 + pcbind * NUM_LEDS_ON_PCB + off] = 3 + 0 * 9 + off; */
-  /**/
-  /* pcbind = 2; */
-  /* l->ids[0 + pcbind * NUM_LEDS_ON_PCB + off] = 6 + 0 * 9 + off; */
-  /* l->ids[1 + pcbind * NUM_LEDS_ON_PCB + off] = 7 + 0 * 9 + off; */
-  /* l->ids[2 + pcbind * NUM_LEDS_ON_PCB + off] = 8 + 0 * 9 + off; */
-  /**/
-  // pcb 1
-  /* l->ids[3 + off] = 0 + 1 * 9 + off; */
-  /* l->ids[4 + off] = 1 + 1 * 9 + off; */
-  /* l->ids[5 + off] = 2 + 1 * 9 + off; */
-  /* l->ids[12 + off] = 5 + 1 * 9 + off; */
-  /* l->ids[13 + off] = 4 + 1 * 9 + off; */
-  /* l->ids[14 + off] = 3 + 1 * 9 + off; */
-  /* l->ids[21 + off] = 6 + 1 * 9 + off; */
-  /* l->ids[22 + off] = 7 + 1 * 9 + off; */
-  /* l->ids[23 + off] = 8 + 1 * 9 + off; */
-  /**/
-  /* // pcb 2 */
-  /* l->ids[6 + off] = 0 + 2 * 9 + off; */
-  /* l->ids[7 + off] = 1 + 2 * 9 + off; */
-  /* l->ids[8 + off] = 2 + 2 * 9 + off; */
-  /* l->ids[15 + off] = 5 + 2 * 9 + off; */
-  /* l->ids[16 + off] = 4 + 2 * 9 + off; */
-  /* l->ids[17 + off] = 3 + 2 * 9 + off; */
-  /* l->ids[24 + off] = 6 + 2 * 9 + off; */
-  /* l->ids[25 + off] = 7 + 2 * 9 + off; */
-  /* l->ids[26 + off] = 8 + 2 * 9 + off; */
-}
-
 // Establish a top-left origin, meaning that
 // later on, words etc. can be defined by rows, columns
 // reason: Easy to rotate such a thing
@@ -263,9 +253,21 @@ void qlock_leds_init(qlock_leds *l, rotation rot) {
   printf("led_map_init rot=%u\n", rot);
   l->rot = rot;
 
-  qlock_leds_init_pcb_row_manual(l, 0);
-  qlock_leds_init_pcb_row_manual(l, 1);
-  qlock_leds_init_pcb_row_manual(l, 2);
+  qlock_leds_init_row_l2r(l, 0);
+  qlock_leds_init_row_r2l(l, 1);
+  qlock_leds_init_row_l2r(l, 2);
+
+  qlock_leds_init_row_r2l(l, 3);
+  qlock_leds_init_row_l2r(l, 4);
+  qlock_leds_init_row_r2l(l, 5);
+  qlock_leds_init_row_l2r(l, 6);
+  qlock_leds_init_row_r2l(l, 7);
+  qlock_leds_init_row_l2r(l, 8);
+  qlock_leds_init_row_r2l(l, 9);
+
+  /* qlock_leds_init_pcb_row_manual(l, 0); */
+  /* qlock_leds_init_pcb_row_manual(l, 1); */
+  /* qlock_leds_init_pcb_row_manual(l, 2); */
   /* qlock_leds_init_pcb_row(l, 0); */
   /* qlock_leds_init_pcb_row(l, 1); */
   /* qlock_leds_init_pcb_row(l, 2); */
